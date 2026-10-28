@@ -6,7 +6,7 @@ Plugin WordPress vận hành website cho hệ sinh thái SMLIFE (smlife.vn và c
 
 Từ bản 1.25.0, mỗi website cài SMLIFE Core tự đọc dòng `Version:` của `smlife-core.php` trên nhánh **main** (6 tiếng một lần). Bản trên main mới hơn bản đang chạy thì trang Plugin hiện "Có bản cập nhật", bấm Cập nhật là xong. Không cần Release hay tag.
 
-Kho riêng tư nên mỗi website cần thêm vào `wp-config.php` (trước dòng `require_once ABSPATH . 'wp-settings.php';`):
+Kho đang để công khai nên không cần cấu hình gì. Nếu sau này chuyển về riêng tư, thêm vào `wp-config.php` của từng website (trước dòng `require_once ABSPATH . 'wp-settings.php';`):
 
 ```php
 define( 'SMLIFE_CORE_GH_TOKEN', 'github_pat_...' ); // Fine-grained token, chỉ quyền Contents: Read-only cho kho smlife-core

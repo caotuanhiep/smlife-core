@@ -5,7 +5,7 @@
 Bản đầu tiên phát hành qua GitHub. Gồm toàn bộ 1.24.0 và 1.24.1.
 
 ### Mới
-- Tự cập nhật từ GitHub: trang Plugin hiện "Có bản cập nhật" khi có bản mới trên nhánh main. Cần `SMLIFE_CORE_GH_TOKEN` trong wp-config.php.
+- Tự cập nhật từ GitHub: trang Plugin hiện "Có bản cập nhật" khi có bản mới trên nhánh main. Kho công khai nên không cần cấu hình thêm.
 - Bảng điều khiển có dòng trạng thái cập nhật và nút "Kiểm tra cập nhật ngay".
 - Tên thương hiệu trong mặc định Email Center và Menu mobile lấy theo từng website.
 
