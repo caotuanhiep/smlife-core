@@ -1,5 +1,11 @@
 # Nhật ký thay đổi SMLIFE Core
 
+## 1.27.1 - 30/10/2026
+
+### Sửa lỗi
+- Schema sản phẩm: sản phẩm biến thể (Rank Math xuất dạng ProductGroup, giá nằm trong từng biến thể) trước đây không được thêm shippingDetails, hasMerchantReturnPolicy, validFrom. Giờ bổ sung vào từng biến thể. Phần lớn sản phẩm smlife.vn là biến thể nên đây là nguyên nhân Merchant listings vẫn báo thiếu thông tin giao hàng và đổi trả.
+- Schema sản phẩm: productGroupID của sản phẩm biến thể luôn là SKU hợp lệ; SKU biến thể trùng SKU nhóm hoặc sai định dạng thì đặt lại thành SKU nhóm + số thứ tự; tên sản phẩm quá 150 ký tự thì cắt gọn. Dọn các lỗi "Invalid value in field sku/productGroupID" và "Invalid string length in field name".
+
 ## 1.27.0 - 30/10/2026
 
 ### Mới

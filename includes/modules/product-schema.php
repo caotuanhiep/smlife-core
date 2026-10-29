@@ -279,10 +279,33 @@ function smlife_sch_don_sku( $entity, $product ) {
 		$entity['mpn'] = $sku;
 	}
 
-	if ( isset( $entity['productGroupID'] ) ) {
-		if ( empty( $entity['productGroupID'] ) || ! $product->is_type( 'variable' ) ) {
+	if ( isset( $entity['productGroupID'] ) || ! empty( $entity['hasVariant'] ) ) {
+		if ( ! $product->is_type( 'variable' ) ) {
 			unset( $entity['productGroupID'] );
+		} else {
+			/* 1.27.1: productGroupID phai la chuoi hop le, dung SKU da lam sach */
+			$entity['productGroupID'] = $sku;
 		}
+	}
+	/* 1.27.1: SKU tung bien the. Bien the trung SKU nhom hoac SKU sai dinh dang
+	   thi dat lai = SKU nhom + so thu tu, de Google khong bao "Invalid value in field sku" */
+	if ( ! empty( $entity['hasVariant'] ) && is_array( $entity['hasVariant'] ) ) {
+		$da = array();
+		foreach ( $entity['hasVariant'] as $i => $v ) {
+			if ( ! is_array( $v ) ) { continue; }
+			$vs = isset( $v['sku'] ) ? trim( (string) $v['sku'] ) : '';
+			if ( '' === $vs || $vs === $sku || isset( $da[ $vs ] ) || ! preg_match( '/^[A-Za-z0-9._\-]{1,50}$/', $vs ) ) {
+				$vs = substr( $sku, 0, 44 ) . '-' . ( $i + 1 );
+			}
+			$da[ $vs ] = 1;
+			$entity['hasVariant'][ $i ]['sku'] = $vs;
+			if ( isset( $v['name'] ) && mb_strlen( (string) $v['name'] ) > 150 ) {
+				$entity['hasVariant'][ $i ]['name'] = mb_substr( (string) $v['name'], 0, 147 ) . '...';
+			}
+		}
+	}
+	if ( isset( $entity['name'] ) && mb_strlen( (string) $entity['name'] ) > 150 ) {
+		$entity['name'] = mb_substr( (string) $entity['name'], 0, 147 ) . '...';
 	}
 	return $entity;
 }
@@ -349,8 +372,29 @@ function smlife_sch_va( $entity ) {
 	}
 
 	$entity = smlife_sch_don_rating( $entity, $product );
-	$entity = smlife_sch_don_sku( $entity, $product );
 	$entity = smlife_sch_vao_offers( $entity, $product );
+
+	/* 1.27.1: san pham bien the - Rank Math xuat ProductGroup, gia nam trong tung
+	   bien the (hasVariant[].offers) chu khong o cap nhom. Truoc day bo sot nen
+	   san pham bien the khong co shippingDetails / hasMerchantReturnPolicy. */
+	if ( ! empty( $entity['hasVariant'] ) && is_array( $entity['hasVariant'] ) ) {
+		$can_cn = empty( $o['toan_quoc_free'] ); /* chi can can nang tung bien the khi tinh phi theo kg */
+		foreach ( $entity['hasVariant'] as $i => $v ) {
+			if ( ! is_array( $v ) ) { continue; }
+			$vp = $product;
+			if ( $can_cn && ! empty( $v['sku'] ) && function_exists( 'wc_get_product_id_by_sku' ) ) {
+				$vid = (int) wc_get_product_id_by_sku( (string) $v['sku'] );
+				if ( $vid && $vid !== $product->get_id() ) {
+					$tmp = wc_get_product( $vid );
+					if ( $tmp ) { $vp = $tmp; }
+				}
+			}
+			$entity['hasVariant'][ $i ] = smlife_sch_vao_offers( $v, $vp );
+		}
+	}
+
+	/* Lam sach SKU sau cung (sau khi da tra SKU bien the de lay can nang) */
+	$entity = smlife_sch_don_sku( $entity, $product );
 
 	return $entity;
 }
