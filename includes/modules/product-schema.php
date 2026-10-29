@@ -42,13 +42,13 @@ function smlife_sch_opt() {
 		'tinh_xuly_min'  => 1,
 		'tinh_xuly_max'  => 2,
 		'tinh_giao_min'  => 4,
-		'tinh_giao_max'  => 6,
+		'tinh_giao_max'  => 5,
 
 		/* Doi tra */
 		'doi_tra_ngay'   => 7,
 		'ai_tra_phi'     => 'shop',   /* shop | khach */
 		'phi_tra_ve'     => 0,        /* So tien khach tu tra khi gui hang ve */
-		'cach_tra'       => 'ReturnByMail',
+		'cach_tra'       => 'ReturnInStore', /* Khop Merchant Center: tra tai cua hang */
 		'link_doi_tra'   => 'https://smlife.vn/chinh-sach-bao-hanh-doi-tra',
 
 		/* Don du lieu */
@@ -374,7 +374,7 @@ function smlife_sch_page() {
 
 	echo '<div class="wrap smlife-wrap">';
 	echo '<div class="smc-hd"><h1>Schema sản phẩm (Google Merchant Listings)</h1>';
-	echo '<p>Khai báo phí giao hàng, thời gian giao và chính sách đổi trả cho Google. Thiếu ba thông tin này thì sản phẩm không được đưa vào tab Shopping và khối sản phẩm phổ biến trên trang kết quả tìm kiếm.</p></div>';
+	echo '<p>Khai báo phí giao hàng, thời gian giao và chính sách đổi trả cho Google. Thiếu ba thông tin này thì sản phẩm không được đưa vào tab Shopping và khối sản phẩm phổ biến trên trang kết quả tìm kiếm.</p><p><strong>Lưu ý:</strong> các con số ở đây phải khớp với mục Vận chuyển và trả lại hàng trong Google Merchant Center. Lệch nhau thì Merchant Center được ưu tiên và Google có thể cảnh báo thông tin không nhất quán.</p></div>';
 
 	if ( isset( $_GET['updated'] ) ) {
 		echo '<div class="notice notice-success is-dismissible"><p>Đã lưu. Nhớ xoá cache rồi kiểm tra lại bằng công cụ Rich Results Test của Google.</p></div>';
@@ -410,8 +410,8 @@ function smlife_sch_page() {
 	echo '</select> <span class="description">Khai sai là lý do Google loại sản phẩm khỏi Shopping</span></td></tr>';
 	echo '<tr><th scope="row">Phí khách trả khi gửi về</th><td><input type="number" name="sc[phi_tra_ve]" value="' . esc_attr( $o['phi_tra_ve'] ) . '" min="0" step="1000" class="regular-text" style="max-width:160px" /> đ <span class="description">Chỉ dùng khi chọn "Khách tự trả" ở trên. Google bắt buộc có số tiền, bỏ trống là lỗi.</span></td></tr>';
 	echo '<tr><th scope="row">Cách gửi hàng về</th><td><select name="sc[cach_tra]">';
-	echo '<option value="ReturnByMail" ' . selected( 'ReturnByMail', $o['cach_tra'], false ) . '>Gửi qua đơn vị vận chuyển</option>';
 	echo '<option value="ReturnInStore" ' . selected( 'ReturnInStore', $o['cach_tra'], false ) . '>Mang tới showroom</option>';
+	echo '<option value="ReturnByMail" ' . selected( 'ReturnByMail', $o['cach_tra'], false ) . '>Gửi qua đơn vị vận chuyển</option>';
 	echo '</select></td></tr>';
 	echo '<tr><th scope="row">Link chính sách</th><td><input type="url" name="sc[link_doi_tra]" value="' . esc_attr( $o['link_doi_tra'] ) . '" class="large-text" /></td></tr>';
 
@@ -465,7 +465,7 @@ add_action( 'admin_post_smlife_sch_save', function () {
 		'doi_tra_ngay'  => $so( 'doi_tra_ngay' ),
 		'ai_tra_phi'    => ( isset( $in['ai_tra_phi'] ) && 'khach' === $in['ai_tra_phi'] ) ? 'khach' : 'shop',
 		'phi_tra_ve'    => $so( 'phi_tra_ve' ),
-		'cach_tra'      => ( isset( $in['cach_tra'] ) && 'ReturnInStore' === $in['cach_tra'] ) ? 'ReturnInStore' : 'ReturnByMail',
+		'cach_tra'      => ( isset( $in['cach_tra'] ) && 'ReturnByMail' === $in['cach_tra'] ) ? 'ReturnByMail' : 'ReturnInStore',
 		'link_doi_tra'  => isset( $in['link_doi_tra'] ) ? esc_url_raw( $in['link_doi_tra'] ) : $def['link_doi_tra'],
 		'don_rating'    => empty( $in['don_rating'] ) ? 0 : 1,
 		'sua_sku'       => empty( $in['sua_sku'] ) ? 0 : 1,

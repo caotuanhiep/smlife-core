@@ -1,5 +1,9 @@
 # Nhật ký thay đổi SMLIFE Core
 
+## 1.26.2 - 29/10/2026
+
+- Schema sản phẩm: mặc định khớp với Merchant Center của smlife.vn. Đổi trả mặc định "Mang tới showroom" (Merchant Center đang khai trả tại cửa hàng, miễn phí, 7 ngày). Giao tỉnh mặc định 5-7 ngày tổng. Thêm ghi chú phải khớp với Merchant Center trên trang cài đặt.
+
 ## 1.26.1 - 29/10/2026
 
 - Schema sản phẩm: thêm ô "Phí khách trả khi gửi về". Google bắt buộc khai số tiền khi khách tự trả phí đổi trả, bỏ trống thì cả khối chính sách bị coi là không hợp lệ. Mặc định đổi sang "Shop trả".
