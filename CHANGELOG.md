@@ -1,5 +1,11 @@
 # Nhật ký thay đổi SMLIFE Core
 
+## 1.27.0 - 30/10/2026
+
+### Mới
+- **Canh đường dẫn** (mặc định BẬT): mỗi 10 phút, trong lượt cron, gọi thử sitemap_index.xml của Rank Math và một trang danh mục sản phẩm. Hỏng (404, bị chuyển về trang chủ, mở nhầm chuyên mục blog) thì lượt truy cập kế tiếp tự tạo lại bảng đường dẫn như bấm Lưu ở Đường dẫn tĩnh, xoá cache WP Rocket/LiteSpeed và gửi email. Tự sửa 2 lần vẫn hỏng thì dừng và gửi email báo xử lý tay.
+- Ghi lại mỗi lần bảng quy tắc đường dẫn bị tạo lại (giờ, kiểu truy cập, URL, plugin gọi) để tìm plugin gây lỗi. Xem ở SMLIFE Core > Canh đường dẫn.
+
 ## 1.26.5 - 30/10/2026
 
 ### Sửa lỗi

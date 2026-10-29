@@ -346,6 +346,16 @@ function smlife_core_modules() {
 			'probe'    => 'smlife_feed_page',
 			'mac_dinh' => 0,
 		),
+		'canh-duong-dan' => array(
+			'icon'     => 'dashicons-admin-links',
+			'group'    => 'he-thong',
+			'name'     => 'Canh đường dẫn',
+			'desc'     => 'Mỗi 10 phút gọi thử sitemap và trang danh mục sản phẩm. Hỏng thì tự tạo lại bảng đường dẫn (như bấm Lưu ở Đường dẫn tĩnh), xoá cache, gửi email và ghi lại plugin gây lỗi.',
+			'file'     => 'canh-duong-dan.php',
+			'page'     => 'smlife-canh-duong-dan',
+			'probe'    => 'smlife_cdd_page',
+			'mac_dinh' => 1,
+		),
 		'tweaks' => array(
 			'icon'  => 'dashicons-admin-tools',
 			'group' => 'he-thong',
