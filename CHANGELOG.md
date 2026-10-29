@@ -1,5 +1,10 @@
 # Nhật ký thay đổi SMLIFE Core
 
+## 1.27.2 - 30/10/2026
+
+### Sửa lỗi
+- Mô tả meta sản phẩm: Rank Math lấy mô tả ngắn của sản phẩm thay cho mẫu "Single Product Description", nên trên Google vẫn hiện chữ dính ("Cao 140cmChất liệu"). Khi module Schema sản phẩm bật, sản phẩm nào chưa tự viết mô tả SEO riêng sẽ dùng đúng mẫu đã đặt trong Rank Math (cả og:description).
+
 ## 1.27.1 - 30/10/2026
 
 ### Sửa lỗi

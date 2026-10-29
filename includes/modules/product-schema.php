@@ -410,6 +410,28 @@ add_filter( 'wpseo_schema_product', function ( $data ) {
 	return smlife_sch_va( $data );
 }, 20, 1 );
 
+/* 1.27.2: Mo ta meta san pham. Rank Math (WooCommerce) uu tien mo ta ngan cua
+   san pham hon mau "Single Product Description", nen meta van bi dinh chu kieu
+   "Cao 140cmChat lieu". San pham khong tu viet mo ta SEO rieng thi dung mau. */
+function smlife_sch_meta_desc( $desc ) {
+	if ( ! function_exists( 'is_product' ) || ! is_product() || ! class_exists( '\RankMath\Helper' ) ) {
+		return $desc;
+	}
+	$id = get_queried_object_id();
+	if ( '' !== trim( (string) get_post_meta( $id, 'rank_math_description', true ) ) ) {
+		return $desc;
+	}
+	$tpl = (string) \RankMath\Helper::get_settings( 'titles.pt_product_description' );
+	if ( '' === trim( $tpl ) || false !== strpos( $tpl, '%excerpt%' ) ) {
+		return $desc;
+	}
+	$moi = trim( wp_strip_all_tags( (string) \RankMath\Helper::replace_vars( $tpl, get_post( $id ) ) ) );
+	return '' !== $moi ? $moi : $desc;
+}
+add_filter( 'rank_math/frontend/description', 'smlife_sch_meta_desc', 99 );
+add_filter( 'rank_math/opengraph/facebook/og_description', 'smlife_sch_meta_desc', 99 );
+add_filter( 'rank_math/opengraph/twitter/twitter_description', 'smlife_sch_meta_desc', 99 );
+
 /* ===== Submenu: SMLIFE Core > Schema sản phẩm ===== */
 add_action( 'admin_menu', function () {
 	add_submenu_page(
