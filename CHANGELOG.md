@@ -1,5 +1,10 @@
 # Nhật ký thay đổi SMLIFE Core
 
+## 1.26.4 - 29/10/2026
+
+### Sửa lỗi
+- Cập nhật tự động từ GitHub báo lỗi HTTP 415: sửa header tải gói zipball (application/vnd.github+json).
+
 ## 1.26.3 - 29/10/2026
 
 ### Mới

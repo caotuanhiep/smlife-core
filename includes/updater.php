@@ -142,7 +142,7 @@ add_filter( 'upgrader_pre_download', function ( $reply, $package ) {
 	$res = wp_remote_get( $package, array(
 		'timeout'     => 30,
 		'redirection' => 0,
-		'headers'     => smlife_gh_headers( 'application/octet-stream' ),
+		'headers'     => smlife_gh_headers( 'application/vnd.github+json' ),
 	) );
 	if ( is_wp_error( $res ) ) {
 		return $res;
