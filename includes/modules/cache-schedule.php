@@ -286,6 +286,9 @@ function smlife_xc_ht_tt() {
 		'wp' => ( false !== strpos( $noi, '# BEGIN WordPress' ) && false !== strpos( $noi, 'index.php' ) ) ? 1 : 0,
 		't'  => (int) @filemtime( $f ),
 		'kb' => strlen( $noi ),
+		/* 1.25.1: dau van tay noi dung, bo qua dong trong. Solid Security ghi lai file
+		   moi gio (luot quet xx:30), chi doi dong trong, khong tinh la "bi sua". */
+		'md' => md5( preg_replace( '/\R\s*/', "\n", trim( $noi ) ) ),
 	);
 }
 
@@ -296,7 +299,8 @@ function smlife_xc_ht_kiem( $sua = true ) {
 	$f  = smlife_xc_ht_file();
 
 	/* File bi sua tu lan kiem truoc: ghi nhat ky de truy thu pham */
-	if ( ! empty( $cu['t'] ) && ( (int) $cu['t'] !== $tt['t'] || (int) $cu['kb'] !== $tt['kb'] ) ) {
+	$doi = ! empty( $cu['md'] ) ? ( $cu['md'] !== ( isset( $tt['md'] ) ? $tt['md'] : '' ) ) : ( ! empty( $cu['t'] ) && ( (int) $cu['t'] !== $tt['t'] || (int) $cu['kb'] !== $tt['kb'] ) );
+	if ( $doi ) {
 		$ghi = $tt['co'] ? 'File .htaccess bị sửa lúc ' . wp_date( 'H:i:s d/m/Y', $tt['t'] ) . ', ' . (int) $cu['kb'] . ' → ' . (int) $tt['kb'] . ' byte' . ( $tt['wp'] ? '' : ', MẤT quy tắc WordPress' ) : 'File .htaccess bị XOÁ';
 		smlife_xc_ghi( 'htaccess', (bool) $tt['wp'], 0, $ghi );
 	}
@@ -415,7 +419,7 @@ function smlife_xc_ht_kiem( $sua = true ) {
 			}
 		}
 	}
-	update_option( 'smlife_xc_ht', array( 't' => $tt['t'], 'kb' => $tt['kb'], 'kt' => time() ), false );
+	update_option( 'smlife_xc_ht', array( 't' => $tt['t'], 'kb' => $tt['kb'], 'md' => isset( $tt['md'] ) ? $tt['md'] : '', 'kt' => time() ), false );
 	return $tt;
 }
 
@@ -519,7 +523,19 @@ function smlife_xc_ht_dau() {
 	$khoi = smlife_xc_ht_khoi();
 	$bo   = preg_replace( '/[ \t]*# BEGIN SMLIFE Core.*?# END SMLIFE Core[ \t]*\r?\n?/s', '', $noi );
 	$moi  = '' === $khoi ? $bo : $khoi . "\n" . ltrim( $bo, "\r\n" );
-	if ( $moi === $noi ) {
+	/* 1.25.1: khoi da dung noi dung, chi co 1 khoi, va dung TRUOC khoi Solid Security
+	   thi coi nhu dat, khong ghi lai chi vi lech dong trong (truoc day moi gio giang
+	   co voi Solid 1 lan, nhat ky day dong .htaccess). */
+	$vt_sm = strpos( $noi, '# BEGIN SMLIFE Core' );
+	$vt_so = false;
+	foreach ( array( '# BEGIN Solid Security', '# BEGIN iThemes Security' ) as $mk ) {
+		$x = strpos( $noi, $mk );
+		if ( false !== $x && ( false === $vt_so || $x < $vt_so ) ) {
+			$vt_so = $x;
+		}
+	}
+	$dat = '' !== $khoi && 1 === substr_count( $noi, '# BEGIN SMLIFE Core' ) && false !== strpos( $noi, trim( $khoi ) ) && ( false === $vt_so || $vt_sm < $vt_so );
+	if ( $moi === $noi || $dat ) {
 		flock( $h, LOCK_UN );
 		fclose( $h );
 		return false;

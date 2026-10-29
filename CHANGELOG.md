@@ -1,5 +1,11 @@
 # Nhật ký thay đổi SMLIFE Core
 
+## 1.26.5 - 30/10/2026
+
+### Sửa lỗi
+- Lịch xoá cache: hết giằng co .htaccess với Solid Security. Lượt quét mỗi giờ của Solid ghi lại file và lệch một dòng trống, SMLIFE Core 15 phút sau lại ghi đè, nhật ký đầy dòng .htaccess che mất dòng lịch đêm. Giờ khối ngoại lệ đã đúng nội dung và nằm trước khối Solid thì không ghi lại.
+- Nhật ký chỉ ghi "File .htaccess bị sửa" khi nội dung thật sự đổi (bỏ qua dòng trống), không ghi khi chỉ đổi giờ sửa file.
+
 ## 1.26.4 - 29/10/2026
 
 ### Sửa lỗi
