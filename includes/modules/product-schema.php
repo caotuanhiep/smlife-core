@@ -46,7 +46,8 @@ function smlife_sch_opt() {
 
 		/* Doi tra */
 		'doi_tra_ngay'   => 7,
-		'ai_tra_phi'     => 'khach',  /* shop | khach */
+		'ai_tra_phi'     => 'shop',   /* shop | khach */
+		'phi_tra_ve'     => 0,        /* So tien khach tu tra khi gui hang ve */
 		'cach_tra'       => 'ReturnByMail',
 		'link_doi_tra'   => 'https://smlife.vn/chinh-sach-bao-hanh-doi-tra',
 
@@ -190,10 +191,12 @@ function smlife_sch_doi_tra() {
 	if ( 'shop' === $o['ai_tra_phi'] ) {
 		$pol['returnFees'] = 'https://schema.org/FreeReturn';
 	} else {
-		$pol['returnFees']          = 'https://schema.org/ReturnShippingFees';
+		/* Google bat buoc khai so tien khi khach phai tra phi gui hang ve.
+		   Bo trong thi ca khoi doi tra bi coi la khong hop le. */
+		$pol['returnFees']               = 'https://schema.org/ReturnShippingFees';
 		$pol['returnShippingFeesAmount'] = array(
 			'@type'    => 'MonetaryAmount',
-			'value'    => '0',
+			'value'    => (string) (int) $o['phi_tra_ve'],
 			'currency' => get_woocommerce_currency(),
 		);
 	}
@@ -405,6 +408,7 @@ function smlife_sch_page() {
 	echo '<option value="shop" ' . selected( 'shop', $o['ai_tra_phi'], false ) . '>Shop trả, khách không mất phí</option>';
 	echo '<option value="khach" ' . selected( 'khach', $o['ai_tra_phi'], false ) . '>Khách tự trả phí gửi hàng về</option>';
 	echo '</select> <span class="description">Khai sai là lý do Google loại sản phẩm khỏi Shopping</span></td></tr>';
+	echo '<tr><th scope="row">Phí khách trả khi gửi về</th><td><input type="number" name="sc[phi_tra_ve]" value="' . esc_attr( $o['phi_tra_ve'] ) . '" min="0" step="1000" class="regular-text" style="max-width:160px" /> đ <span class="description">Chỉ dùng khi chọn "Khách tự trả" ở trên. Google bắt buộc có số tiền, bỏ trống là lỗi.</span></td></tr>';
 	echo '<tr><th scope="row">Cách gửi hàng về</th><td><select name="sc[cach_tra]">';
 	echo '<option value="ReturnByMail" ' . selected( 'ReturnByMail', $o['cach_tra'], false ) . '>Gửi qua đơn vị vận chuyển</option>';
 	echo '<option value="ReturnInStore" ' . selected( 'ReturnInStore', $o['cach_tra'], false ) . '>Mang tới showroom</option>';
@@ -459,7 +463,8 @@ add_action( 'admin_post_smlife_sch_save', function () {
 		'tinh_giao_min' => $so( 'tinh_giao_min' ),
 		'tinh_giao_max' => $so( 'tinh_giao_max' ),
 		'doi_tra_ngay'  => $so( 'doi_tra_ngay' ),
-		'ai_tra_phi'    => ( isset( $in['ai_tra_phi'] ) && 'shop' === $in['ai_tra_phi'] ) ? 'shop' : 'khach',
+		'ai_tra_phi'    => ( isset( $in['ai_tra_phi'] ) && 'khach' === $in['ai_tra_phi'] ) ? 'khach' : 'shop',
+		'phi_tra_ve'    => $so( 'phi_tra_ve' ),
 		'cach_tra'      => ( isset( $in['cach_tra'] ) && 'ReturnInStore' === $in['cach_tra'] ) ? 'ReturnInStore' : 'ReturnByMail',
 		'link_doi_tra'  => isset( $in['link_doi_tra'] ) ? esc_url_raw( $in['link_doi_tra'] ) : $def['link_doi_tra'],
 		'don_rating'    => empty( $in['don_rating'] ) ? 0 : 1,

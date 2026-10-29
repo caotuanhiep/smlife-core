@@ -4,7 +4,7 @@
  * Plugin URI:        https://github.com/caotuanhiep/smlife-core
  * Update URI:        https://github.com/caotuanhiep/smlife-core
  * Description:       Bộ công cụ vận hành website cho hệ sinh thái SMLIFE. Gồm các module bán hàng, liên hệ và hệ thống, bật tắt từng cái trong Bảng điều khiển.
- * Version:     1.26.0
+ * Version:     1.26.1
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * Author:            Cao Tuấn Hiệp
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SMLIFE_CORE_VER', '1.26.0' );
+define( 'SMLIFE_CORE_VER', '1.26.1' );
 define( 'SMLIFE_CORE_FILE', __FILE__ );
 define( 'SMLIFE_CORE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'SMLIFE_CORE_URL', plugin_dir_url( __FILE__ ) );

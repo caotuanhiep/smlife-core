@@ -1,5 +1,9 @@
 # Nhật ký thay đổi SMLIFE Core
 
+## 1.26.1 - 29/10/2026
+
+- Schema sản phẩm: thêm ô "Phí khách trả khi gửi về". Google bắt buộc khai số tiền khi khách tự trả phí đổi trả, bỏ trống thì cả khối chính sách bị coi là không hợp lệ. Mặc định đổi sang "Shop trả".
+
 ## 1.26.0 - 29/10/2026
 
 Hai module SEO, dựng sau khi soát Google Search Console. Cả hai mặc định TẮT, tự bật trong Bảng điều khiển.
