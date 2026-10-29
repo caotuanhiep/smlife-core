@@ -326,6 +326,16 @@ function smlife_core_modules() {
 			'probe'    => 'smlife_sch_page',
 			'mac_dinh' => 0,
 		),
+		'danh-gia-google' => array(
+			'icon'  => 'dashicons-star-half',
+			'group'    => 'ban-hang',
+			'name'     => 'Đánh giá cửa hàng Google',
+			'desc'     => 'Hộp đồng ý khảo sát Google Customer Reviews trên trang Đặt hàng thành công. Tích điểm xếp hạng cửa hàng và ngôi sao trên Google Shopping.',
+			'file'     => 'google-reviews.php',
+			'page'     => 'smlife-danh-gia-google',
+			'probe'    => 'smlife_gcr_page',
+			'mac_dinh' => 0,
+		),
 		'tat-feed' => array(
 			'icon'  => 'dashicons-rss',
 			'group'    => 'he-thong',

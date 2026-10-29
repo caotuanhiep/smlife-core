@@ -27,6 +27,7 @@ function smlife_sch_opt() {
 		'enabled'        => 1,
 
 		/* Giao hang */
+		'toan_quoc_free' => 1,      /* 1.26.3: freeship toan quoc, mot vung duy nhat, khop Merchant Center */
 		'hcm_free'       => 1,      /* Mien phi noi thanh HCM */
 		'hcm_rate'       => 0,      /* Phi HCM neu khong mien phi */
 		'tinh_co_dinh'   => 30000,  /* Phi co dinh cho tinh khac */
@@ -35,10 +36,10 @@ function smlife_sch_opt() {
 		'kg_mac_dinh'    => 10,     /* Dung khi san pham chua khai can nang */
 
 		/* Thoi gian giao, don vi ngay */
-		'hcm_xuly_min'   => 1,
-		'hcm_xuly_max'   => 2,
-		'hcm_giao_min'   => 2,
-		'hcm_giao_max'   => 3,
+		'hcm_xuly_min'   => 0,
+		'hcm_xuly_max'   => 1,
+		'hcm_giao_min'   => 1,
+		'hcm_giao_max'   => 2,
 		'tinh_xuly_min'  => 1,
 		'tinh_xuly_max'  => 2,
 		'tinh_giao_min'  => 4,
@@ -138,6 +139,23 @@ function smlife_sch_thoi_gian( $xuly_min, $xuly_max, $giao_min, $giao_max ) {
 /* ===== shippingDetails: 2 vung, HCM va cac tinh con lai ===== */
 function smlife_sch_giao_hang( $product ) {
 	$o = smlife_sch_opt();
+
+	/* Freeship toan quoc: mot vung Viet Nam, mien phi, dung thoi gian cua nhom HCM */
+	if ( ! empty( $o['toan_quoc_free'] ) ) {
+		return array(
+			array(
+				'@type'               => 'OfferShippingDetails',
+				'shippingRate'        => smlife_sch_tien( 0, 0 ),
+				'shippingDestination' => array(
+					'@type'          => 'DefinedRegion',
+					'addressCountry' => 'VN',
+				),
+				'deliveryTime'        => smlife_sch_thoi_gian(
+					$o['hcm_xuly_min'], $o['hcm_xuly_max'], $o['hcm_giao_min'], $o['hcm_giao_max']
+				),
+			),
+		);
+	}
 	list( $kg_min, $kg_max ) = smlife_sch_can_nang( $product );
 
 	$hcm_phi = empty( $o['hcm_free'] ) ? (int) $o['hcm_rate'] : 0;
@@ -389,12 +407,14 @@ function smlife_sch_page() {
 
 	echo '<tr><th scope="row">Bật tính năng</th><td><label><input type="checkbox" name="sc[enabled]" value="1" ' . checked( 1, $o['enabled'], false ) . ' /> Bổ sung shippingDetails, hasMerchantReturnPolicy và validFrom vào schema sản phẩm</label></td></tr>';
 
-	echo '<tr><th colspan="2"><h2 style="margin:18px 0 0">Giao hàng nội thành TP.HCM</h2></th></tr>';
+	echo '<tr><th colspan="2"><h2 style="margin:18px 0 0">Giao hàng</h2></th></tr>';
+	echo '<tr><th scope="row">Freeship toàn quốc</th><td><label><input type="checkbox" name="sc[toan_quoc_free]" value="1" ' . checked( 1, $o['toan_quoc_free'], false ) . ' /> Khai với Google: miễn phí giao hàng toàn Việt Nam</label><br><span class="description">Bật thì chỉ dùng ô Thời gian ngay bên dưới cho cả nước, bỏ qua khối Tỉnh khác. Phải khớp với Merchant Center.</span></td></tr>';
+	echo '<tr><th colspan="2"><h3 style="margin:12px 0 0">Nội thành TP.HCM (hoặc toàn quốc khi bật Freeship toàn quốc)</h3></th></tr>';
 	echo '<tr><th scope="row">Miễn phí</th><td><label><input type="checkbox" name="sc[hcm_free]" value="1" ' . checked( 1, $o['hcm_free'], false ) . ' /> Miễn phí giao hàng trong TP.HCM</label></td></tr>';
 	echo '<tr><th scope="row">Phí nếu không miễn</th><td><input type="number" name="sc[hcm_rate]" value="' . esc_attr( $o['hcm_rate'] ) . '" min="0" step="1000" class="small-text" /> đ <span class="description">Chỉ dùng khi bỏ chọn ô Miễn phí ở trên</span></td></tr>';
 	echo '<tr><th scope="row">Thời gian</th><td>Chuẩn bị hàng <input type="number" name="sc[hcm_xuly_min]" value="' . esc_attr( $o['hcm_xuly_min'] ) . '" min="0" class="small-text" /> đến <input type="number" name="sc[hcm_xuly_max]" value="' . esc_attr( $o['hcm_xuly_max'] ) . '" min="0" class="small-text" /> ngày, vận chuyển <input type="number" name="sc[hcm_giao_min]" value="' . esc_attr( $o['hcm_giao_min'] ) . '" min="0" class="small-text" /> đến <input type="number" name="sc[hcm_giao_max]" value="' . esc_attr( $o['hcm_giao_max'] ) . '" min="0" class="small-text" /> ngày</td></tr>';
 
-	echo '<tr><th colspan="2"><h2 style="margin:18px 0 0">Giao hàng tỉnh khác (Viettel Post)</h2></th></tr>';
+	echo '<tr><th colspan="2"><h3 style="margin:12px 0 0">Tỉnh khác (Viettel Post) - chỉ dùng khi TẮT Freeship toàn quốc</h3></th></tr>';
 	echo '<tr><th scope="row">Phí cố định</th><td><input type="number" name="sc[tinh_co_dinh]" value="' . esc_attr( $o['tinh_co_dinh'] ) . '" min="0" step="1000" class="regular-text" style="max-width:160px" /> đ <span class="description">Phần không đổi, cộng vào mọi đơn đi tỉnh</span></td></tr>';
 	echo '<tr><th scope="row">Phí mỗi kg</th><td><input type="number" name="sc[tinh_moi_kg]" value="' . esc_attr( $o['tinh_moi_kg'] ) . '" min="0" step="500" class="regular-text" style="max-width:160px" /> đ/kg <span class="description">Nhân với cân nặng khai trong từng sản phẩm</span></td></tr>';
 	echo '<tr><th scope="row">Trần phí</th><td><input type="number" name="sc[tinh_toi_da]" value="' . esc_attr( $o['tinh_toi_da'] ) . '" min="0" step="10000" class="regular-text" style="max-width:160px" /> đ <span class="description">Để 0 nếu không giới hạn</span></td></tr>';
@@ -448,6 +468,7 @@ add_action( 'admin_post_smlife_sch_save', function () {
 
 	$new = array(
 		'enabled'       => empty( $in['enabled'] ) ? 0 : 1,
+		'toan_quoc_free'=> empty( $in['toan_quoc_free'] ) ? 0 : 1,
 		'hcm_free'      => empty( $in['hcm_free'] ) ? 0 : 1,
 		'hcm_rate'      => $so( 'hcm_rate' ),
 		'tinh_co_dinh'  => $so( 'tinh_co_dinh' ),

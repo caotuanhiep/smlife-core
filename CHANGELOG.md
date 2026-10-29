@@ -1,5 +1,13 @@
 # Nhật ký thay đổi SMLIFE Core
 
+## 1.26.3 - 29/10/2026
+
+### Mới
+- **Đánh giá cửa hàng Google**: hộp đồng ý khảo sát Google Customer Reviews trên trang Đặt hàng thành công. Bỏ qua đơn không có email, mỗi đơn chỉ hỏi một lần. Mặc định TẮT, cần nhập Merchant ID.
+
+### Thay đổi
+- Schema sản phẩm: thêm ô "Freeship toàn quốc", mặc định BẬT. Khai một vùng Việt Nam miễn phí, giao 1-3 ngày, khớp Merchant Center.
+
 ## 1.26.2 - 29/10/2026
 
 - Schema sản phẩm: mặc định khớp với Merchant Center của smlife.vn. Đổi trả mặc định "Mang tới showroom" (Merchant Center đang khai trả tại cửa hàng, miễn phí, 7 ngày). Giao tỉnh mặc định 5-7 ngày tổng. Thêm ghi chú phải khớp với Merchant Center trên trang cài đặt.
