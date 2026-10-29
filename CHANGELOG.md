@@ -1,5 +1,19 @@
 # Nhật ký thay đổi SMLIFE Core
 
+## 1.26.0 - 29/10/2026
+
+Hai module SEO, dựng sau khi soát Google Search Console. Cả hai mặc định TẮT, tự bật trong Bảng điều khiển.
+
+### Mới
+- **Schema sản phẩm**: bổ sung `shippingDetails`, `hasMerchantReturnPolicy` và `validFrom` vào schema sản phẩm. Thiếu ba trường này nên 4.172 sản phẩm của smlife.vn không vào được tab Shopping và khối sản phẩm phổ biến.
+  - Phí giao tỉnh tính riêng cho từng sản phẩm theo công thức phí cố định cộng phí mỗi kg, lấy cân nặng thật của sản phẩm. Sản phẩm biến thể khai thành khoảng từ nhẹ nhất tới nặng nhất.
+  - Nội thành TP.HCM khai riêng một vùng, mặc định miễn phí.
+  - Bỏ khối `aggregateRating` ở sản phẩm chưa có đánh giá, sửa 184 lỗi rating ngoài khoảng và 360 lỗi reviewCount/ratingCount bằng 0.
+  - Tự sinh SKU hợp lệ cho sản phẩm bỏ trống hoặc có ký tự lạ, gỡ `productGroupID` rỗng.
+  - Chạy với Rank Math, có đường dự phòng cho Yoast WooCommerce SEO.
+- **Tắt feed sản phẩm**: chuyển hướng 301 feed RSS của sản phẩm và danh mục về trang chủ, gỡ thẻ link feed khỏi `<head>`. Dọn nhóm lỗi 500 đang báo trong Search Console.
+
+
 ## 1.25.0 - 28/10/2026
 
 Bản đầu tiên phát hành qua GitHub. Gồm toàn bộ 1.24.0 và 1.24.1.
