@@ -571,7 +571,8 @@ function smlife_duty_page() {
 	$staff = smlife_duty_staff();
 	$days  = smlife_duty_days();
 	$st    = smlife_duty_state();
-	$suns  = smlife_duty_next_sundays( 4 );
+	/* 1.28.0: xep truoc ca quy (14 tuan: tuan nay + 13 tuan toi), nhan su set 1 lan 3 thang */
+	$suns  = smlife_duty_next_sundays( 14 );
 
 	echo '<div class="wrap dt-wrap">';
 	echo '<div class="dt-hd"><h1>Lịch Trực Sales</h1>';
@@ -651,10 +652,23 @@ function smlife_duty_page() {
 
 	/* --- 2. Lich cuoi tuan --- */
 	echo '<div class="dt-card"><h2>2. Lịch cuối tuần - ai trực Chủ nhật</h2><div class="in">';
-	echo '<p class="description" style="margin:0 0 12px">Mỗi tuần chọn một người trực Chủ nhật. Người đó tự động được nghỉ Thứ 7 liền trước. Chiều Thứ 6 nhớ chốt lịch cho tuần sau.</p>';
-	echo '<table class="dt-tb"><tr><th style="width:150px">Chủ nhật</th><th style="width:150px">Thứ 7 nghỉ</th><th>Người trực Chủ nhật</th></tr>';
+	echo '<p class="description" style="margin:0 0 12px">Mỗi tuần chọn một người trực Chủ nhật. Người đó tự động được nghỉ Thứ 7 liền trước. Bảng hiện sẵn ' . count( $suns ) . ' tuần (khoảng 3 tháng) để xếp một lần cho cả quý. Tuần đã qua tự biến mất, tuần mới tự thêm vào cuối bảng.</p>';
+	/* Nut xep xoay vong: chi dien cac tuan dang trong, xoay vong theo thu tu nhan su,
+	   tiep noi nguoi cuoi cung da xep. Chi dien vao o, phai bam Luu moi ghi. */
+	$ds_on = array_map( 'intval', array_keys( $staff ) );
+	echo '<div class="dt-xv" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px">';
+	echo '<button type="button" class="button" id="dt-xv" data-ds="' . esc_attr( wp_json_encode( $ds_on ) ) . '"' . ( count( $ds_on ) < 1 ? ' disabled' : '' ) . '>↻ Xếp xoay vòng các tuần còn trống</button>';
+	echo '<button type="button" class="button" id="dt-xv-xoa">Bỏ trống tất cả</button>';
+	echo '<span class="description">Chỉ điền vào bảng, bấm <b>Lưu</b> ở cuối trang mới ghi lại.</span></div>';
+	echo '<table class="dt-tb" id="dt-plan"><tr><th style="width:150px">Chủ nhật</th><th style="width:150px">Thứ 7 nghỉ</th><th>Người trực Chủ nhật</th></tr>';
+	$thang = '';
 	foreach ( $suns as $sun ) {
 		$cur = isset( $o['plan'][ $sun ] ) ? (int) $o['plan'][ $sun ] : -1;
+		$th  = wp_date( 'm/Y', strtotime( $sun . ' 12:00:00' ) );
+		if ( $th !== $thang ) {
+			$thang = $th;
+			echo '<tr class="dt-th"><td colspan="3" style="padding:10px 0 4px;font-weight:700;color:#475569;border-bottom:1px solid #e5e7eb">Tháng ' . esc_html( $th ) . '</td></tr>';
+		}
 		echo '<tr>';
 		echo '<td><b>' . esc_html( smlife_duty_vn_date( $sun ) ) . '</b></td>';
 		echo '<td>' . esc_html( smlife_duty_vn_date( smlife_duty_sat_of( $sun ) ) ) . '</td>';
@@ -666,6 +680,17 @@ function smlife_duty_page() {
 		echo '</select></td></tr>';
 	}
 	echo '</table>';
+	echo '<div class="dt-dem description" id="dt-dem" style="margin-top:8px"></div>';
+	/* JS: xep xoay vong + dem so Chu nhat moi nguoi */
+	echo '<script>(function(){var tb=document.getElementById("dt-plan");if(!tb)return;var sel=[].slice.call(tb.querySelectorAll("select"));';
+	echo 'function dem(){var c={},trong=0;sel.forEach(function(s){var v=s.value;if(v==="-1"){trong++;return;}var t=s.options[s.selectedIndex].text;c[t]=(c[t]||0)+1;});';
+	echo 'var p=[];for(var k in c)p.push(k+": "+c[k]);var el=document.getElementById("dt-dem");if(el)el.textContent="Số Chủ nhật mỗi người: "+(p.length?p.join(" · "):"chưa xếp ai")+(trong?" · Còn trống: "+trong+" tuần":"");}';
+	echo 'sel.forEach(function(s){s.addEventListener("change",dem);});dem();';
+	echo 'var b=document.getElementById("dt-xv");if(b)b.addEventListener("click",function(){var ds=[];try{ds=JSON.parse(b.getAttribute("data-ds"))||[];}catch(e){}if(!ds.length)return;';
+	echo 'var cuoi=-1;sel.forEach(function(s){if(s.value!=="-1")cuoi=parseInt(s.value,10);});var k=ds.indexOf(cuoi);';
+	echo 'sel.forEach(function(s){if(s.value!=="-1")return;k=(k+1)%ds.length;s.value=String(ds[k]);});dem();});';
+	echo 'var x=document.getElementById("dt-xv-xoa");if(x)x.addEventListener("click",function(){if(!confirm("Bỏ trống toàn bộ lịch Chủ nhật trong bảng?"))return;sel.forEach(function(s){s.value="-1";});dem();});';
+	echo '})();</script>';
 	echo '<div class="dt-row" style="margin-top:10px"><label class="dt-sw"><input type="checkbox" name="duty[sat_off]" value="1" ' . checked( 1, (int) $o['sat_off'], false ) . ' /><i></i></label>';
 	echo '<span class="tx"><strong>Người trực Chủ nhật được nghỉ Thứ 7</strong><em>Tắt đi nếu chỉ muốn xếp trực Chủ nhật mà Thứ 7 vẫn đủ người.</em></span></div>';
 	$moc_v = isset( $o['moc_ngay'] ) && preg_match( '/^([01]\d|2[0-3]):[0-5]\d$/', (string) $o['moc_ngay'] ) ? $o['moc_ngay'] : '00:00';

@@ -1,5 +1,11 @@
 # Nhật ký thay đổi SMLIFE Core
 
+## 1.28.0 - 30/10/2026
+
+### Thay đổi
+- Lịch Trực Sales: bảng Lịch cuối tuần hiện sẵn 14 tuần (khoảng 3 tháng) thay vì 4 tuần, chia theo tháng, để nhân sự xếp một lần cho cả quý. Tuần đã qua tự biến mất, tuần mới tự thêm vào cuối bảng.
+- Thêm nút "Xếp xoay vòng các tuần còn trống" (điền lần lượt theo thứ tự nhân sự, nối tiếp người đã xếp cuối cùng), nút "Bỏ trống tất cả" và dòng đếm số Chủ nhật của mỗi người. Hai nút chỉ điền vào bảng, phải bấm Lưu mới ghi.
+
 ## 1.27.2 - 30/10/2026
 
 ### Sửa lỗi
