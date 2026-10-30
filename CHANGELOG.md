@@ -1,5 +1,11 @@
 # Nhật ký thay đổi SMLIFE Core
 
+## 1.29.1 - 30/10/2026
+
+### Thay đổi
+- Bỏ khung "Chưa có đánh giá" của bản 1.29.0 theo yêu cầu. Module Đánh giá sản phẩm trở lại y như bản 1.28.0: sản phẩm chưa có đánh giá thì không hiện gì.
+- Giữ nguyên Lịch cuối tuần xếp trước cả quý (từ 1.28.0).
+
 ## 1.29.0 - 30/10/2026
 
 ### Mới

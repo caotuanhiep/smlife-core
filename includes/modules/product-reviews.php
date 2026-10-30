@@ -45,12 +45,6 @@ function smlife_dgsp_defaults() {
 		'db_khoa'  => '',
 		'db_the'   => 1,
 		'db_vitri' => 'ten',
-		/* 1.29.0: san pham chua co danh gia - hien khung moi thay vi bo trong */
-		'chua_hien' => 1,
-		'chua_tieu' => 'Chưa có đánh giá cho sản phẩm này',
-		'chua_mota' => 'Đã mua sản phẩm này? Gửi ảnh thực tế và cảm nhận cho shop, đánh giá của bạn giúp khách sau chọn dễ hơn.',
-		'chua_nut'  => 'Gửi đánh giá qua Zalo',
-		'chua_link' => '',
 	);
 }
 
@@ -262,24 +256,6 @@ function smlife_dgsp_sao( $sao, $co = 15 ) {
 	return $h . '</span>';
 }
 
-/* 1.29.0: khung "Chua co danh gia" o vi tri khoi danh gia. Khong hien sao,
-   khong co diem so, nen khong tao du lieu danh gia nao cho Google. */
-function smlife_dgsp_chua_khoi( $o ) {
-	smlife_dgsp_nap();
-	$link = trim( (string) $o['chua_link'] );
-	$h  = '<div class="smdg smdg-chua" id="smdg-khoi">';
-	$h .= '<div class="smdg-chua-ic" aria-hidden="true">' . smlife_dgsp_sao( 0, 22 ) . '</div>';
-	$h .= '<div class="smdg-chua-tx"><div class="smdg-chua-t">' . esc_html( $o['chua_tieu'] ) . '</div>';
-	if ( '' !== trim( (string) $o['chua_mota'] ) ) {
-		$h .= '<div class="smdg-chua-m">' . esc_html( $o['chua_mota'] ) . '</div>';
-	}
-	$h .= '</div>';
-	if ( '' !== $link && '' !== trim( (string) $o['chua_nut'] ) ) {
-		$h .= '<a class="smdg-chua-nut" href="' . esc_url( $link ) . '" target="_blank" rel="noopener nofollow">' . esc_html( $o['chua_nut'] ) . '</a>';
-	}
-	return $h . '</div>';
-}
-
 function smlife_dgsp_truoc( $gmt ) {
 	$t = strtotime( $gmt . ' GMT' );
 	if ( ! $t ) {
@@ -299,9 +275,7 @@ function smlife_dgsp_sc( $atts ) {
 	if ( ! $pid ) { return ''; }
 
 	$ds = smlife_dgsp_lay( $pid, max( 5, (int) $o['so_toi_da'] ) );
-	if ( ! $ds ) {
-		return ! empty( $o['chua_hien'] ) ? smlife_dgsp_chua_khoi( $o ) : '';
-	}
+	if ( ! $ds ) { return ''; }
 
 	$tk  = smlife_dgsp_tk_sp( $pid );
 	if ( $tk['tong'] < 1 ) { $tk = smlife_dgsp_tom_tat( $ds ); }
@@ -448,8 +422,7 @@ function smlife_dgsp_meta_sc( $atts ) {
 	}
 	$db = ! empty( $o['db_hien'] ) ? smlife_dgsp_daban( $pid ) : 0;
 
-	$chua = $so < 1 && ! empty( $o['chua_hien'] );
-	if ( $so < 1 && $db < 1 && ! $chua ) { return ''; }
+	if ( $so < 1 && $db < 1 ) { return ''; }
 
 	smlife_dgsp_nap();
 
@@ -457,10 +430,6 @@ function smlife_dgsp_meta_sc( $atts ) {
 	if ( $so > 0 ) {
 		$h .= smlife_dgsp_sao( floor( $tb + 0.5 ), 15 );
 		$h .= '<a href="#smdg-khoi" class="smdg-m-sl">( <strong>' . esc_html( number_format_i18n( $so ) ) . '</strong> đánh giá)</a>';
-	} elseif ( $chua ) {
-		/* 1.29.0: sao xam + "Chua co danh gia", khong phai diem so, khong vao schema */
-		$h .= smlife_dgsp_sao( 0, 15 );
-		$h .= '<a href="#smdg-khoi" class="smdg-m-sl">Chưa có đánh giá</a>';
 	}
 	if ( $db > 0 ) {
 		$h .= '<span class="smdg-m-db"><strong>' . esc_html( number_format_i18n( $db ) ) . '</strong> ' . esc_html( $o['db_nhan'] ) . '</span>';
@@ -629,12 +598,6 @@ function smlife_dgsp_css() {
 	$c .= '.smdg-mo-n:hover{border-color:' . $mau . ';color:' . $mau . '}';
 	$c .= '.smdg-trong{display:none;text-align:center;color:#8d8d8d;font-size:13.5px;padding:26px 0}';
 	$c .= '.smdg.rong .smdg-trong{display:block}';
-	/* 1.29.0: khung chua co danh gia */
-	$c .= '.smdg.smdg-chua{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:18px 20px;border:1px dashed #d6d6d6;border-radius:12px;background:#fafafa;margin:0}';
-	$c .= '.smdg-chua-tx{flex:1 1 260px;min-width:0}.smdg-chua-t{font-weight:700;font-size:15px;color:#3a3a3a;margin:0 0 3px}';
-	$c .= '.smdg-chua-m{font-size:13.5px;color:#6a6a6a;line-height:1.5}';
-	$c .= '.smdg-chua-nut{display:inline-block;padding:9px 16px;border-radius:999px;background:' . $mau . ';color:#fff !important;font-weight:600;font-size:13.5px;text-decoration:none !important;white-space:nowrap}';
-	$c .= '.smdg-chua-nut:hover{opacity:.9}';
 	/* So da ban trong the san pham */
 	$c .= '.smdg-l-db{font-size:12.5px;color:#8d8d8d;line-height:1.3;margin:3px 0 0}';
 	/* Dong meta duoi ten san pham */
@@ -1407,11 +1370,6 @@ function smlife_dgsp_page() {
 	echo '<tr><th>Nhãn sau số đã bán</th><td><input type="text" name="dg[db_nhan]" value="' . esc_attr( $o['db_nhan'] ) . '" class="regular-text" /></td></tr>';
 	echo '<tr><th>Khoá số đã bán của plugin cũ</th><td><input type="text" name="dg[db_khoa]" value="' . esc_attr( $o['db_khoa'] ) . '" class="regular-text" /> <span class="description">Dùng tạm khi chưa chép sang. Xem mục Số lượng đã bán.</span></td></tr>';
 	echo '<tr><th>Tên shop khi trả lời</th><td><input type="text" name="dg[ten_shop]" value="' . esc_attr( $o['ten_shop'] ) . '" class="regular-text" /></td></tr>';
-	/* 1.29.0 */
-	echo '<tr><th>Sản phẩm chưa có đánh giá</th><td><input type="hidden" name="dg[chua_form]" value="1" /><label><input type="checkbox" name="dg[chua_hien]" value="1" ' . checked( 1, (int) $o['chua_hien'], false ) . ' /> Hiện sao xám "Chưa có đánh giá" dưới tên sản phẩm và một khung mời đánh giá ở chỗ khối đánh giá</label><br /><span class="description">Chỉ là lời mời, không có điểm số nên không tạo dữ liệu đánh giá giả cho Google.</span></td></tr>';
-	echo '<tr><th>Tiêu đề khung</th><td><input type="text" name="dg[chua_tieu]" value="' . esc_attr( $o['chua_tieu'] ) . '" class="large-text" /></td></tr>';
-	echo '<tr><th>Lời mời</th><td><textarea name="dg[chua_mota]" rows="2" class="large-text">' . esc_textarea( $o['chua_mota'] ) . '</textarea></td></tr>';
-	echo '<tr><th>Nút gửi đánh giá</th><td><input type="text" name="dg[chua_nut]" value="' . esc_attr( $o['chua_nut'] ) . '" class="regular-text" placeholder="Chữ trên nút" /><br /><input type="url" name="dg[chua_link]" value="' . esc_attr( $o['chua_link'] ) . '" class="large-text" placeholder="https://zalo.me/..." style="margin-top:6px" /><br /><span class="description">Link Zalo OA hoặc Zalo của shop. Để trống thì không hiện nút.</span></td></tr>';
 	echo '</table>';
 	submit_button( 'Lưu' );
 	echo '</form></div></div>';
@@ -1517,7 +1475,6 @@ add_action( 'admin_post_smlife_dgsp_save', function () {
 	check_admin_referer( 'smlife_dgsp_save', 'smlife_dgsp_nonce' );
 	$in = isset( $_POST['dg'] ) && is_array( $_POST['dg'] ) ? wp_unslash( $_POST['dg'] ) : array();
 	$d  = smlife_dgsp_defaults();
-	$cu = smlife_dgsp_opt();
 	update_option( 'smlife_dgsp', array(
 		'enabled'   => empty( $in['enabled'] ) ? 0 : 1,
 		'so_dau'    => max( 1, min( 30, isset( $in['so_dau'] ) ? (int) $in['so_dau'] : 5 ) ),
@@ -1532,12 +1489,6 @@ add_action( 'admin_post_smlife_dgsp_save', function () {
 		'db_khoa'   => isset( $in['db_khoa'] ) ? preg_replace( '/[^A-Za-z0-9_\-]/', '', (string) $in['db_khoa'] ) : '',
 		'db_the'    => empty( $in['db_the'] ) ? 0 : 1,
 		'db_vitri'  => ( isset( $in['db_vitri'] ) && in_array( $in['db_vitri'], array( 'ten', 'gia_truoc', 'gia_sau' ), true ) ) ? $in['db_vitri'] : 'ten',
-		/* 1.29.0: chi doc khi form chinh gui len (co o moc chua_form), form phu giu nguyen */
-		'chua_hien' => ! empty( $in['chua_form'] ) ? ( empty( $in['chua_hien'] ) ? 0 : 1 ) : (int) $cu['chua_hien'],
-		'chua_tieu' => isset( $in['chua_tieu'] ) ? sanitize_text_field( $in['chua_tieu'] ) : $cu['chua_tieu'],
-		'chua_mota' => isset( $in['chua_mota'] ) ? sanitize_textarea_field( $in['chua_mota'] ) : $cu['chua_mota'],
-		'chua_nut'  => isset( $in['chua_nut'] ) ? sanitize_text_field( $in['chua_nut'] ) : $cu['chua_nut'],
-		'chua_link' => isset( $in['chua_link'] ) ? esc_url_raw( trim( (string) $in['chua_link'] ) ) : $cu['chua_link'],
 	), true );
 	if ( function_exists( 'rocket_clean_domain' ) ) { smlife_xoa_cache(); }
 	wp_safe_redirect( admin_url( 'admin.php?page=smlife-dg-san-pham&updated=1' ) );
