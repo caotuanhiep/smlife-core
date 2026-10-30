@@ -1,5 +1,11 @@
 # Nhật ký thay đổi SMLIFE Core
 
+## 1.29.0 - 30/10/2026
+
+### Mới
+- Đánh giá sản phẩm: sản phẩm chưa có đánh giá không còn bỏ trống. Dưới tên sản phẩm hiện 5 sao xám kèm chữ "Chưa có đánh giá", chỗ khối đánh giá hiện khung mời khách gửi đánh giá, có nút gửi qua Zalo (điền link trong cài đặt, để trống thì ẩn nút).
+- Không có điểm số nên không tạo dữ liệu đánh giá cho Google. Bật tắt và sửa chữ ở SMLIFE Core > Đánh giá sản phẩm > Hiển thị, mặc định BẬT.
+
 ## 1.28.0 - 30/10/2026
 
 ### Thay đổi
