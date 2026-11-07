@@ -1,5 +1,13 @@
 # Nhật ký thay đổi SMLIFE Core
 
+## 1.29.2 - 07/11/2026
+
+### Sửa lỗi
+- Giá theo số lượng: thẻ sản phẩm ở trang danh mục, khối sản phẩm liên quan, tìm kiếm và trang tải thêm giờ hiện giá bậc thấp nhất như trang chi tiết. Trước đây chỉ trang chi tiết sản phẩm đang mở mới đổi giá, các nơi khác vẫn hiện giá gốc.
+
+### Mới
+- Lịch Trực Sales: cảnh báo khi số điện thoại ở Menu mobile / Hotline Header khác số trong mục Nhân sự Sales. Lịch trực nhận người theo số, lệch số thì dòng đó không có nhãn Đang trực và không tự mờ khi nghỉ.
+
 ## 1.29.1 - 30/10/2026
 
 ### Thay đổi

@@ -414,6 +414,41 @@ function smlife_duty_badge( $phone, $where = '' ) {
 	return '<span class="smlife-duty-tag is-off">' . esc_html( $o['off_text'] ) . '</span>';
 }
 
+/* 1.29.2: so tren website (Menu mobile, Hotline Header) va so trong Lich truc lech nhau */
+function smlife_duty_doi_chieu() {
+	$truc = array();
+	foreach ( smlife_duty_staff() as $s ) {
+		$truc[ $s['phone'] ] = (string) $s['name'];
+	}
+	$web = array();
+	$mm  = get_option( 'smlife_mm', array() );
+	if ( is_array( $mm ) && ! empty( $mm['call_items'] ) && is_array( $mm['call_items'] ) ) {
+		foreach ( $mm['call_items'] as $r ) {
+			if ( empty( $r['on'] ) ) { continue; }
+			$p = smlife_duty_norm( isset( $r['url'] ) ? $r['url'] : '' );
+			if ( strlen( $p ) >= 9 ) { $web[ $p ] = array( 'ten' => isset( $r['name'] ) ? (string) $r['name'] : '', 'noi' => 'Menu mobile - Gọi tư vấn' ); }
+		}
+	}
+	$hh = get_option( 'smlife_hh', array() );
+	if ( is_array( $hh ) && ! empty( $hh['items'] ) && is_array( $hh['items'] ) ) {
+		foreach ( $hh['items'] as $r ) {
+			if ( empty( $r['on'] ) ) { continue; }
+			$p = smlife_duty_norm( isset( $r['phone'] ) ? $r['phone'] : '' );
+			if ( strlen( $p ) >= 9 && ! isset( $web[ $p ] ) ) { $web[ $p ] = array( 'ten' => isset( $r['label'] ) ? (string) $r['label'] : '', 'noi' => 'Hotline Header' ); }
+		}
+	}
+	$out = array( 'web' => array(), 'truc' => array() );
+	foreach ( $web as $p => $x ) {
+		if ( ! isset( $truc[ $p ] ) ) { $out['web'][] = array( 'so' => $p, 'ten' => $x['ten'], 'noi' => $x['noi'] ); }
+	}
+	if ( $web ) {
+		foreach ( $truc as $p => $ten ) {
+			if ( ! isset( $web[ $p ] ) ) { $out['truc'][] = array( 'so' => $p, 'ten' => $ten ); }
+		}
+	}
+	return $out;
+}
+
 /* ===== CSS ===== */
 add_action( 'wp_head', function () {
 	if ( ! smlife_duty_active() ) {
@@ -630,6 +665,20 @@ function smlife_duty_page() {
 	echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" id="smlife-duty-form">';
 	echo '<input type="hidden" name="action" value="smlife_duty_save" />';
 	wp_nonce_field( 'smlife_duty_save', 'smlife_duty_nonce' );
+
+	/* 1.29.2: doi chieu so dien thoai. Lich truc nhan nguoi theo SO, so tren Menu mobile /
+	   Hotline Header khac so o day thi dong do khong co nhan Dang truc, khong mo di khi nghi. */
+	$lech = smlife_duty_doi_chieu();
+	if ( $lech['web'] || $lech['truc'] ) {
+		echo '<div class="notice notice-warning inline" style="margin:12px 0"><p><b>Số điện thoại chưa khớp giữa Lịch trực và website.</b> Lịch trực nhận người theo số, dòng nào lệch số sẽ không có nhãn Đang trực / Ngoài ca và không tự mờ khi nghỉ.</p><ul style="list-style:disc;margin-left:20px">';
+		foreach ( $lech['web'] as $x ) {
+			echo '<li>Số <b>' . esc_html( $x['so'] ) . '</b> (' . esc_html( $x['ten'] ) . ') đang hiện ở <b>' . esc_html( $x['noi'] ) . '</b> nhưng không có trong mục 3. Nhân sự Sales.</li>';
+		}
+		foreach ( $lech['truc'] as $x ) {
+			echo '<li>Nhân sự <b>' . esc_html( $x['ten'] ) . '</b> khai số <b>' . esc_html( $x['so'] ) . '</b> nhưng không thấy số này ở Menu mobile hay Hotline Header.</li>';
+		}
+		echo '</ul><p>Sửa cho hai bên cùng một số (thường là sửa ô Số điện thoại ở mục 3 bên dưới), rồi bấm Lưu.</p></div>';
+	}
 
 	/* --- 1. Cong tac nghi --- */
 	echo '<div class="dt-card"><h2>1. Ai đang nghỉ</h2><div class="in">';

@@ -113,17 +113,21 @@ add_action( 'woocommerce_before_calculate_totals', function ( $cart ) {
  *
  * Tren trang san pham co bat bac gia, gia chinh luc moi mo trang hien
  * GIA BAC THAP NHAT (vd 340.000) cho hap dan, dung tinh than "Gia chi".
+ * 1.29.2: ap ca o the san pham trang danh muc, lien quan, tim kiem.
  * Khi khach dung vao o so luong thi JS ben duoi moi de gia bac thuc te
  * len (qty 1 -> 520.000). Chay SAU filter cua module Cau truc gia
  * (priority 20 > 10), chi thay chuoi gia hien tai bang gia bac thap nhat,
  * khong khop chuoi thi giu nguyen cho an toan.
  */
 add_filter( 'woocommerce_get_price_html', function ( $price, $product ) {
-	if ( ! function_exists( 'is_product' ) || ! is_product() ) { return $price; }
+	/* 1.29.2: truoc chi ap tren dung trang chi tiet san pham dang mo, nen the san pham
+	   o trang danh muc, khoi lien quan, tim kiem van hien gia goc. Gio ap moi noi ngoai
+	   trang khach (ke ca AJAX tai them san pham), tru trang quan tri. */
+	if ( is_admin() && ! wp_doing_ajax() ) { return $price; }
+	if ( ! is_object( $product ) ) { return $price; }
 	$o = smlife_gsl_opt();
 	if ( empty( $o['enabled'] ) ) { return $price; }
 	$pid = $product->is_type( 'variation' ) ? $product->get_parent_id() : $product->get_id();
-	if ( (int) get_queried_object_id() !== (int) $pid ) { return $price; }
 	$rows = smlife_gsl_rows( $pid );
 	if ( ! $rows ) { return $price; }
 	$min = 0;
