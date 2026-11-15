@@ -137,7 +137,7 @@ function smlife_qo_new_captcha() {
  * nen khong co JS nao dien ten san pham, link va gia. Doc o phia may chu cho chac.
  * Trang khong phai san pham thi tra ve rong, may chu se lay URL tu HTTP_REFERER. */
 function smlife_qo_current_product() {
-	$out = array( 'name' => '', 'link' => '', 'price' => '' );
+	$out = array( 'id' => 0, 'name' => '', 'link' => '', 'price' => '' );
 	if ( ! function_exists( 'is_product' ) || ! is_product() ) {
 		return $out;
 	}
@@ -145,6 +145,7 @@ function smlife_qo_current_product() {
 	if ( ! $id ) {
 		return $out;
 	}
+	$out['id']   = (int) $id;
 	$out['name'] = get_the_title( $id );
 	$out['link'] = get_permalink( $id );
 	if ( function_exists( 'wc_get_product' ) ) {
@@ -174,6 +175,7 @@ function smlife_qo_shortcode() {
 	$h .= '<form class="smlife-qo-form" method="post" action="' . $ajax . '" data-ajax="' . $ajax . '">';
 	$h .= '<div class="qo-alert" style="display:none"></div>';
 	$h .= '<input type="hidden" name="qo_price" value="' . esc_attr( $sp['price'] ) . '" />';
+	$h .= '<input type="hidden" name="qo_pid" value="' . (int) $sp['id'] . '" />';
 
 	$h .= '<p class="qo-row"><label>' . esc_html( $o['l_name'] ) . ' <span class="qo-req">*</span></label>';
 	$h .= '<input type="text" name="qo_name" required placeholder="' . esc_attr( $o['ph_name'] ) . '" /></p>';
@@ -331,12 +333,38 @@ function smlife_qo_tok() {
 	wp_send_json_success( array( 'n' => wp_create_nonce( 'smlife_qo' ), 'cap' => smlife_qo_new_captcha() ) );
 }
 
+/* Tim ID san pham khach dang xem.
+ * smlife.vn bo tien to /product/ khoi duong dan nen url_to_postid() khong nhan
+ * ra san pham (tra 0), gia tri chuyen doi Mua ngay bi ve 0. Thu lan luot:
+ * 1) ID form gui len, chi nhan neu dung la san pham dang ban;
+ * 2) url_to_postid() cho truong hop duong dan co tien to;
+ * 3) slug cuoi duong dan, tim trong san pham. */
+function smlife_qo_tim_sp( $link, $pid ) {
+	if ( $pid > 0 && 'product' === get_post_type( $pid ) && 'publish' === get_post_status( $pid ) ) {
+		return $pid;
+	}
+	if ( ! $link ) {
+		return 0;
+	}
+	$id = url_to_postid( $link );
+	if ( $id && 'product' === get_post_type( $id ) ) {
+		return (int) $id;
+	}
+	$duong = (string) wp_parse_url( $link, PHP_URL_PATH );
+	$slug  = sanitize_title( basename( untrailingslashit( $duong ) ) );
+	if ( '' === $slug ) {
+		return 0;
+	}
+	$bai = get_page_by_path( $slug, OBJECT, 'product' );
+	return ( $bai && 'publish' === $bai->post_status ) ? (int) $bai->ID : 0;
+}
+
 /* Gia tri chuyen doi lay o may chu, khong tin con so trinh duyet gui len.
  * Truoc day ai sua o an qo_price cung bom duoc gia tri chuyen doi ao len
  * Google Ads, lam lech chien luoc gia tROAS. Gia khach gui chi duoc chap nhan
  * neu nam trong khoang gia that cua san pham (bien the re nhat toi dat nhat). */
-function smlife_qo_gia_that( $link, $gui_len, $mac_dinh ) {
-	$pid = $link ? url_to_postid( $link ) : 0;
+function smlife_qo_gia_that( $link, $gui_len, $mac_dinh, $pid = 0 ) {
+	$pid = smlife_qo_tim_sp( $link, (int) $pid );
 	$p   = ( $pid && function_exists( 'wc_get_product' ) ) ? wc_get_product( $pid ) : null;
 	if ( ! $p ) {
 		return (int) $mac_dinh;
@@ -479,7 +507,8 @@ function smlife_qo_ajax() {
 		/* Gia tri chuyen doi: uu tien gia that cua san pham khach dang xem,
 		 * khong co thi lay con so co dinh trong cau hinh. */
 		$gia_sp    = isset( $_POST['qo_price'] ) ? absint( preg_replace( '/[^0-9]/', '', (string) wp_unslash( $_POST['qo_price'] ) ) ) : 0;
-		$gtm_value = smlife_qo_gia_that( $ref, $gia_sp, (int) $o['gtm_value'] );
+		$qo_pid    = isset( $_POST['qo_pid'] ) ? absint( wp_unslash( $_POST['qo_pid'] ) ) : 0;
+		$gtm_value = smlife_qo_gia_that( $ref, $gia_sp, (int) $o['gtm_value'], $qo_pid );
 
 		$resp['lead'] = array(
 			'id'      => 'QO-' . wp_date( 'Ymd-His' ) . '-' . wp_rand( 100, 999 ),

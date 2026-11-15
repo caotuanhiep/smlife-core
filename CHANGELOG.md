@@ -1,5 +1,10 @@
 # Nhật ký thay đổi SMLIFE Core
 
+## 1.29.3 - 15/11/2026
+
+### Sửa lỗi
+- Form Mua ngay: giá trị chuyển đổi gửi sang Google Ads luôn bằng 0. Nguyên nhân: smlife.vn bỏ tiền tố /product/ khỏi đường dẫn nên hệ thống không nhận ra sản phẩm từ link. Giờ form gửi kèm mã sản phẩm, có thêm phương án dò theo slug, giá trị lấy đúng giá sản phẩm khách đang xem (vẫn chặn con số bị sửa tay ngoài khoảng giá thật).
+
 ## 1.29.2 - 07/11/2026
 
 ### Sửa lỗi

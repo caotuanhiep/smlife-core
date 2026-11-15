@@ -207,6 +207,8 @@ jQuery(document).ready(function($){
 		$('input[name="qo_product"]').val(prodTitle);
 		$('input[name="qo_link"]').val(window.location.href);
 		$('input[name="qo_price"]').val(smlifeGrabPrice());
+		var pidM = (document.body.className || '').match(/postid-(\d+)/);
+		if (pidM) { $('input[name="qo_pid"]').val(pidM[1]); }
 		$('body').addClass('smlife-popup-open');
 		$('.trigger-quick-buy-popup').trigger('click');
 	});
