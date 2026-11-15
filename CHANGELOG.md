@@ -1,5 +1,15 @@
 # Nhật ký thay đổi SMLIFE Core
 
+## 1.30.0 - 15/11/2026
+
+### Mới
+- Module **Zalo ZNS xác nhận đơn** (mặc định tắt): khách đặt qua form Mua ngay hoặc giỏ hàng nhận ngay tin Zalo từ OA SMLIFE, kể cả khi chưa quan tâm OA.
+  - Kết nối OA bằng OAuth v4 của Zalo (có PKCE), token tự làm mới mỗi giờ khi sắp hết hạn, khóa DB để refresh token không bị dùng hai lần.
+  - Ba chế độ: Tắt, Chỉ gửi số thử, Bật cho khách. Có nút Gửi thử.
+  - Chặn chi phí: tối đa N tin mỗi ngày, mỗi số tối đa 3 tin/ngày, mỗi đơn chỉ gửi một lần.
+  - Nhật ký 50 tin gần nhất (số điện thoại che giữa), email báo khi token lỗi.
+- Form Mua ngay phát sự kiện `smlife_qo_da_gui` kèm mã đơn, dùng chung mã với Google Ads.
+
 ## 1.29.3 - 15/11/2026
 
 ### Sửa lỗi

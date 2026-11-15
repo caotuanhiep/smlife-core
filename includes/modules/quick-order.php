@@ -495,6 +495,12 @@ function smlife_qo_ajax() {
 		wp_mail( smlife_qo_notify_to(), 'Đơn Mua ngay mới', $body, $headers );
 	}
 
+	/* Ma don dung chung cho Google Ads va tin Zalo xac nhan */
+	$ma_don = 'QO-' . wp_date( 'Ymd-His' ) . '-' . wp_rand( 100, 999 );
+
+	/* Cho module khac (Zalo ZNS...) gui tin xac nhan cho khach */
+	do_action( 'smlife_qo_da_gui', $extra, $ma_don );
+
 	$resp = array( 'msg' => $o['success_msg'] );
 	if ( ! empty( $o['redirect_url'] ) ) {
 		$resp['redirect'] = $o['redirect_url'];
@@ -511,7 +517,7 @@ function smlife_qo_ajax() {
 		$gtm_value = smlife_qo_gia_that( $ref, $gia_sp, (int) $o['gtm_value'], $qo_pid );
 
 		$resp['lead'] = array(
-			'id'      => 'QO-' . wp_date( 'Ymd-His' ) . '-' . wp_rand( 100, 999 ),
+			'id'      => $ma_don,
 			'event'   => '' !== trim( (string) $o['gtm_event'] ) ? sanitize_key( $o['gtm_event'] ) : 'form_muangay',
 			'value'   => $gtm_value,
 			'phone'   => smlife_qo_phone_e164( $extra['sdt'] ),

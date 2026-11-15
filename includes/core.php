@@ -242,6 +242,16 @@ function smlife_core_modules() {
 			'page'  => 'smlife-form-lien-he',
 			'probe' => 'smlife_lh_page',
 		),
+		'zalo-zns' => array(
+			'icon'     => 'dashicons-format-status',
+			'group'    => 'lien-he',
+			'name'     => 'Zalo ZNS xác nhận đơn',
+			'desc'     => 'Gửi tin Zalo từ OA tới khách ngay khi đặt qua form Mua ngay hoặc giỏ hàng: đã nhận đơn, sẽ liên hệ sớm, cần gấp gọi hotline.',
+			'file'     => 'zalo-zns.php',
+			'page'     => 'smlife-zalo-zns',
+			'probe'    => 'smlife_zns_page',
+			'mac_dinh' => 0,
+		),
 		'chan-so-dt' => array(
 			'icon'  => 'dashicons-shield',
 			'group' => 'lien-he',
