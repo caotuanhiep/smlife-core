@@ -346,6 +346,16 @@ function smlife_core_modules() {
 			'probe'    => 'smlife_gcr_page',
 			'mac_dinh' => 0,
 		),
+		'chan-binh-luan' => array(
+			'icon'     => 'dashicons-dismiss',
+			'group'    => 'he-thong',
+			'name'     => 'Chặn bình luận spam',
+			'desc'     => 'Tắt bình luận và pingback trên blog, chặn bot gửi thẳng vào máy chủ. Đánh giá sản phẩm vẫn mở, được lọc link và bẫy bot.',
+			'file'     => 'comment-guard.php',
+			'page'     => 'smlife-chan-binh-luan',
+			'probe'    => 'smlife_cg_page',
+			'mac_dinh' => 1,
+		),
 		'tat-feed' => array(
 			'icon'  => 'dashicons-rss',
 			'group'    => 'he-thong',

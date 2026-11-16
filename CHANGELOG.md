@@ -1,5 +1,14 @@
 # Nhật ký thay đổi SMLIFE Core
 
+## 1.31.0 - 16/11/2026
+
+### Mới
+- Module **Chặn bình luận spam** (mặc định bật trên website đang chạy):
+  - Đóng bình luận, pingback, trackback trên mọi bài viết và trang, kể cả bài cũ. Bot gửi thẳng vào `wp-comments-post.php` bị từ chối 403.
+  - Ẩn bình luận cũ và số đếm trên blog, tắt pingback qua XML-RPC, bỏ ô nhập Website trong form bình luận.
+  - Đánh giá sản phẩm WooCommerce vẫn mở: chặn nội dung có link hoặc tên miền lạ, bẫy bot ẩn, mỗi IP tối đa 5 lần/giờ, tùy chọn bắt buộc gửi từ form thật.
+  - Đánh giá tạo trong quản trị (nhập CSV, trả lời của shop) và người có quyền duyệt bình luận không bị ảnh hưởng.
+
 ## 1.30.0 - 15/11/2026
 
 ### Mới
