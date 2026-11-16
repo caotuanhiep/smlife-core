@@ -1,5 +1,15 @@
 # Nhật ký thay đổi SMLIFE Core
 
+## 1.32.0 - 16/11/2026
+
+### Mới
+- Module **Đồng ý cookie** (mặc định tắt) theo Luật Bảo vệ dữ liệu cá nhân 2025 và Nghị định 356/2025:
+  - Thẻ nhỏ lần đầu truy cập, hai nút "Chỉ cần thiết" / "Đồng ý tất cả" ngang nhau, nhớ lựa chọn 180 ngày. Trên điện thoại tự nằm trên thanh Menu Mobile.
+  - Google Consent Mode v2: in "consent default" đầu thẻ head trước GTM, cập nhật khi khách chọn, đẩy sự kiện `smlife_consent`.
+  - Dòng đồng ý chính sách dưới nút Gửi đặt hàng (form Mua ngay) và nút Đặt hàng.
+  - Shortcode `[smlife_cookie]` hoặc class `smlife-ck-mo` để mở lại thẻ. Mẫu trang Chính sách bảo vệ dữ liệu cá nhân trong trang cài đặt.
+- Form Mua ngay có filter `smlife_qo_sau_nut` để chèn nội dung dưới nút gửi.
+
 ## 1.31.0 - 16/11/2026
 
 ### Mới

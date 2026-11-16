@@ -212,6 +212,8 @@ function smlife_qo_shortcode() {
 	}
 
 	$h .= '<button type="submit" class="smlife-qo-submit" style="background:' . esc_attr( $o['btn_color'] ) . ' !important;">' . esc_html( $o['btn'] ) . '</button>';
+	/* Cho module khac chen dong chu duoi nut (vd dong y chinh sach du lieu) */
+	$h .= (string) apply_filters( 'smlife_qo_sau_nut', '' );
 	$h .= '</form>';
 
 	return $h;

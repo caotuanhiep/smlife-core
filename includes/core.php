@@ -346,6 +346,16 @@ function smlife_core_modules() {
 			'probe'    => 'smlife_gcr_page',
 			'mac_dinh' => 0,
 		),
+		'dong-y-cookie' => array(
+			'icon'     => 'dashicons-privacy',
+			'group'    => 'he-thong',
+			'name'     => 'Đồng ý cookie',
+			'desc'     => 'Thẻ đồng ý cookie theo Luật Bảo vệ dữ liệu cá nhân 2025, nối Google Consent Mode v2, dòng đồng ý dưới nút đặt hàng và mẫu trang chính sách.',
+			'file'     => 'cookie-consent.php',
+			'page'     => 'smlife-dong-y-cookie',
+			'probe'    => 'smlife_ck_page',
+			'mac_dinh' => 0,
+		),
 		'chan-binh-luan' => array(
 			'icon'     => 'dashicons-dismiss',
 			'group'    => 'he-thong',
