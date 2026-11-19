@@ -10,6 +10,11 @@
  * - Dong chu dong y duoi nut Gui dat hang (form Mua ngay) va nut Dat hang.
  * - Hien thi quyet dinh o trinh duyet nen trang cache (WP Rocket) van dung.
  * - Link hoac nut co class "smlife-ck-mo" (hoac shortcode [smlife_cookie]) mo lai the.
+ * - 1.32.2: tuy chon "Tu dong y khi xem tiep" (mac dinh bat): the van hien o trang dau;
+ *   khach bam link sang trang khac, gui form dat hang, hoac mo trang thu 2 trong phien
+ *   ma chua bam nut nao -> tu ghi nhan "Dong y tat ca". Khach da bam "Chi can thiet"
+ *   thi khong tu dong y. Lua chon luu ca cookie lan localStorage (trinh duyet trong
+ *   app nhu Zalo hay xoa cookie).
  */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
@@ -27,6 +32,8 @@ function smlife_ck_opt() {
 		'consent'   => 1,
 		'form'      => 1,
 		'form_chu'  => 'Bằng việc đặt hàng, bạn đồng ý với',
+		'tu_dong'   => 1,
+		'tu_dong_chu' => 'Tiếp tục xem trang khác nghĩa là bạn đồng ý.',
 	);
 	$s = get_option( 'smlife_ck', array() );
 	return is_array( $s ) ? array_merge( $def, $s ) : $def;
@@ -49,10 +56,20 @@ add_action( 'wp_head', function () {
 	if ( empty( $o['consent'] ) || is_admin() ) {
 		return;
 	}
+	$tuoi = (int) ( max( 1, (int) $o['ngay'] ) * 86400 );
 	echo "<script>(function(){window.dataLayer=window.dataLayer||[];function g(){dataLayer.push(arguments);}window.gtag=window.gtag||g;";
-	echo "var m=document.cookie.match(/(?:^|; )smlife_ck=([^;]+)/),v=m?m[1]:'',y=(v==='all')?'granted':'denied';";
+	echo "function sc(x){document.cookie='smlife_ck='+x+';path=/;max-age=" . $tuoi . ";SameSite=Lax'+(location.protocol==='https:'?';Secure':'');try{localStorage.setItem('smlife_ck',x);}catch(e){}}";
+	echo "var m=document.cookie.match(/(?:^|; )smlife_ck=([^;]+)/),v=m?m[1]:'',tu=0;";
+	/* Cookie bi xoa (trinh duyet trong app) nhung localStorage con: dung lai lua chon cu */
+	echo "if(!v){try{var l=localStorage.getItem('smlife_ck');if(l==='all'||l==='need'){v=l;sc(v);}}catch(e){}}";
+	if ( ! empty( $o['tu_dong'] ) ) {
+		/* Trang thu 2 (khac duong dan) trong cung phien ma chua chon: tu dong y */
+		echo "if(!v){try{var p=sessionStorage.getItem('smlife_ck_p1');if(p&&p!==location.pathname){v='all';tu=1;sc('all');}else if(!p){sessionStorage.setItem('smlife_ck_p1',location.pathname);}}catch(e){}}";
+	}
+	echo "var y=(v==='all')?'granted':'denied';";
 	echo "gtag('consent','default',{ad_storage:y,ad_user_data:y,ad_personalization:y,analytics_storage:y,functionality_storage:'granted',security_storage:'granted',wait_for_update:500});";
-	echo "gtag('set','ads_data_redaction',y==='denied');gtag('set','url_passthrough',true);})();</script>\n";
+	echo "gtag('set','ads_data_redaction',y==='denied');gtag('set','url_passthrough',true);";
+	echo "if(tu){dataLayer.push({event:'smlife_consent',smlife_consent:'all',smlife_consent_kieu:'tu_dong'});}})();</script>\n";
 }, -9999 );
 
 /* ===== 2. The dong y ===== */
@@ -81,22 +98,34 @@ add_action( 'wp_footer', function () {
 </style>
 <div id="smlife-ck" role="dialog" aria-live="polite" aria-label="Đồng ý cookie">
 <p class="ck-h">🍪 <?php echo esc_html( $o['tieu_de'] ); ?></p>
-<div><?php echo esc_html( $o['noi_dung'] ) . $link; // phpcs:ignore -- link da escape ?></div>
+<div><?php echo esc_html( $o['noi_dung'] ) . $link . ( ! empty( $o['tu_dong'] ) && '' !== trim( (string) $o['tu_dong_chu'] ) ? ' ' . esc_html( $o['tu_dong_chu'] ) : '' ); // phpcs:ignore -- da escape ?></div>
 <div class="ck-r"><button type="button" class="ck-no" data-ck="need"><?php echo esc_html( $o['nut_khong'] ); ?></button><button type="button" class="ck-ok" data-ck="all"><?php echo esc_html( $o['nut_co'] ); ?></button></div>
 </div>
 <script>(function(){
 var box=document.getElementById('smlife-ck');if(!box)return;
-function doc(){var m=document.cookie.match(/(?:^|; )smlife_ck=([^;]+)/);return m?m[1]:'';}
-function chon(v){
+function doc(){var m=document.cookie.match(/(?:^|; )smlife_ck=([^;]+)/);if(m)return m[1];try{var l=localStorage.getItem('smlife_ck');if(l==='all'||l==='need')return l;}catch(e){}return '';}
+function chon(v,kieu){
  document.cookie='smlife_ck='+v+';path=/;max-age=<?php echo (int) ( $ngay * 86400 ); ?>;SameSite=Lax'+(location.protocol==='https:'?';Secure':'');
+ try{localStorage.setItem('smlife_ck',v);}catch(e){}
  var y=v==='all'?'granted':'denied';window.dataLayer=window.dataLayer||[];
  if(typeof window.gtag==='function'){window.gtag('consent','update',{ad_storage:y,ad_user_data:y,ad_personalization:y,analytics_storage:y});}
- window.dataLayer.push({event:'smlife_consent',smlife_consent:v});
+ window.dataLayer.push({event:'smlife_consent',smlife_consent:v,smlife_consent_kieu:kieu||'bam_nut'});
  box.classList.remove('on');
 }
 box.addEventListener('click',function(e){var b=e.target.closest?e.target.closest('[data-ck]'):null;if(b){chon(b.getAttribute('data-ck'));}});
 document.addEventListener('click',function(e){var a=e.target.closest?e.target.closest('.smlife-ck-mo'):null;if(a){e.preventDefault();box.classList.add('on');}});
 if(!doc()||/[?&]smlife_ck_xem=1/.test(location.search)){box.classList.add('on');}
+<?php if ( ! empty( $o['tu_dong'] ) ) : ?>
+/* Tu dong y: bam link sang trang khac cung web, hoac gui form (dat hang). Chay o pha capture, truoc tag chuyen doi trong GTM */
+function tu(){if(!doc()){chon('all','tu_dong');}}
+document.addEventListener('click',function(e){
+ if(!e.target.closest||e.target.closest('#smlife-ck')||e.target.closest('.smlife-ck-mo'))return;
+ var a=e.target.closest('a[href]');
+ if(a){var h=a.getAttribute('href')||'';if(h.charAt(0)==='#'||/^(javascript|tel|mailto|zalo|sms):/i.test(h))return;try{var u=new URL(a.href,location.href);if(u.host===location.host&&u.pathname!==location.pathname){tu();}}catch(x){}return;}
+ if(e.target.closest('button[type=submit],input[type=submit],.smlife-qo-submit,.single_add_to_cart_button,.checkout-button')){tu();}
+},true);
+document.addEventListener('submit',function(){tu();},true);
+<?php endif; ?>
 })();</script>
 	<?php
 }, 99 );
@@ -159,6 +188,7 @@ function smlife_ck_page() {
 	echo '<tr><th scope="row">Nhớ lựa chọn</th><td><input type="number" name="ck[ngay]" value="' . esc_attr( $o['ngay'] ) . '" min="1" max="395" class="small-text" /> ngày</td></tr>';
 	echo '<tr><th scope="row">Google Consent Mode v2</th><td><label><input type="checkbox" name="ck[consent]" value="1" ' . checked( 1, $o['consent'], false ) . ' /> Gửi tín hiệu đồng ý cho Google Tag Manager</label><p class="description">Trong GTM, tag Google Ads và GA4 tự đọc tín hiệu này. Khách chưa đồng ý thì tag chạy chế độ không cookie, Google tự ước tính chuyển đổi.</p></td></tr>';
 	echo '<tr><th scope="row">Dòng đồng ý ở form đặt hàng</th><td><label><input type="checkbox" name="ck[form]" value="1" ' . checked( 1, $o['form'], false ) . ' /> Hiện dưới nút Gửi đặt hàng (form Mua ngay) và nút Đặt hàng (thanh toán)</label><br><input type="text" name="ck[form_chu]" value="' . esc_attr( $o['form_chu'] ) . '" class="large-text" style="margin-top:6px" /></td></tr>';
+	echo '<tr><th scope="row">Tự đồng ý khi xem tiếp</th><td><label><input type="checkbox" name="ck[tu_dong]" value="1" ' . checked( 1, $o['tu_dong'], false ) . ' /> Khách chưa bấm nút nào mà bấm sang trang khác, mở trang thứ 2 hoặc gửi form đặt hàng thì tính là Đồng ý tất cả</label><br><input type="text" name="ck[tu_dong_chu]" value="' . esc_attr( $o['tu_dong_chu'] ) . '" class="large-text" style="margin-top:6px" /><p class="description">Câu này hiện cuối thẻ để báo cho khách. Khách đã bấm "' . esc_html( $o['nut_khong'] ) . '" thì không tự đồng ý. Lưu ý: Luật 91/2025 coi im lặng không phải là đồng ý, bật tùy chọn này là doanh nghiệp tự chịu rủi ro pháp lý.</p></td></tr>';
 	echo '</table>';
 	submit_button( 'Lưu' );
 	echo '</form>';
@@ -175,7 +205,7 @@ function smlife_ck_mau_chinh_sach() {
 		. "1. Đơn vị xử lý dữ liệu\n[Tên công ty], MST [mã số thuế], địa chỉ [địa chỉ]. Liên hệ về dữ liệu cá nhân: [email], hotline [số điện thoại].\n\n"
 		. "2. Dữ liệu chúng tôi thu thập\n- Khi bạn đặt hàng hoặc gửi form: họ tên, số điện thoại, email, địa chỉ nhận hàng, ghi chú đơn hàng.\n- Khi bạn truy cập website: cookie và dữ liệu kỹ thuật (trình duyệt, thiết bị, trang đã xem, nguồn truy cập).\n- Chúng tôi không thu thập dữ liệu cá nhân nhạy cảm và không yêu cầu ảnh giấy tờ tùy thân.\n\n"
 		. "3. Mục đích sử dụng\n- Xử lý, xác nhận, giao lắp và bảo hành đơn hàng; liên hệ tư vấn khi bạn yêu cầu.\n- Gửi tin nhắn xác nhận đơn hàng qua Zalo (ZNS) hoặc email tới số điện thoại, email bạn cung cấp.\n- Xuất hóa đơn, thực hiện nghĩa vụ kế toán, thuế theo quy định.\n- Đo lường, cải thiện website và quảng cáo (chỉ khi bạn đồng ý cookie đo lường, quảng cáo).\n\n"
-		. "4. Cookie\n- Cookie cần thiết: giỏ hàng, đăng nhập, bảo mật. Luôn bật để website hoạt động.\n- Cookie đo lường và quảng cáo (Google Analytics, Google Ads, Google Tag Manager, Facebook...): chỉ bật khi bạn chọn \"Đồng ý tất cả\". Bạn có thể đổi lựa chọn bất cứ lúc nào qua link \"Cài đặt cookie\" ở chân trang.\n\n"
+		. "4. Cookie\n- Cookie cần thiết: giỏ hàng, đăng nhập, bảo mật. Luôn bật để website hoạt động.\n- Cookie đo lường và quảng cáo (Google Analytics, Google Ads, Google Tag Manager, Facebook...): chỉ bật khi bạn chọn \"Đồng ý tất cả\" hoặc tiếp tục xem trang khác sau khi đã được thông báo. Bạn có thể đổi lựa chọn bất cứ lúc nào qua link \"Cài đặt cookie\" ở chân trang.\n\n"
 		. "5. Chia sẻ dữ liệu\nChỉ chia sẻ ở mức cần thiết cho: đơn vị vận chuyển, đối tác thanh toán, nhà cung cấp hóa đơn điện tử, Zalo (gửi tin xác nhận), cơ quan nhà nước khi có yêu cầu hợp pháp. Chúng tôi không mua bán dữ liệu cá nhân.\n\n"
 		. "6. Thời gian lưu trữ\nDữ liệu đơn hàng lưu trong thời hạn kế toán, thuế theo luật định. Dữ liệu tư vấn chưa phát sinh đơn lưu tối đa 24 tháng rồi xóa.\n\n"
 		. "7. Quyền của bạn\nBạn có quyền được biết, đồng ý, truy cập, chỉnh sửa, xóa, hạn chế xử lý, rút lại sự đồng ý và khiếu nại. Gửi yêu cầu tới [email] hoặc hotline [số điện thoại]; chúng tôi phản hồi trong thời hạn luật định.\n\n"
@@ -206,6 +236,8 @@ add_action( 'admin_post_smlife_ck_save', function () {
 		'consent'   => empty( $in['consent'] ) ? 0 : 1,
 		'form'      => empty( $in['form'] ) ? 0 : 1,
 		'form_chu'  => $t( 'form_chu' ),
+		'tu_dong'   => empty( $in['tu_dong'] ) ? 0 : 1,
+		'tu_dong_chu' => isset( $in['tu_dong_chu'] ) ? sanitize_text_field( $in['tu_dong_chu'] ) : $d['tu_dong_chu'],
 	) );
 	if ( function_exists( 'smlife_xoa_cache' ) ) {
 		smlife_xoa_cache( 'Đồng ý cookie' );

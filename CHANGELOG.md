@@ -1,5 +1,13 @@
 # Nhật ký thay đổi SMLIFE Core
 
+## 1.32.2 - 20/11/2026
+
+### Mới
+- **Đồng ý cookie**: tùy chọn "Tự đồng ý khi xem tiếp" (mặc định bật). Thẻ vẫn hiện ở trang đầu; khách chưa bấm nút nào mà bấm sang trang khác, mở trang thứ 2 trong phiên hoặc bấm Gửi đặt hàng thì tính là Đồng ý tất cả. Tín hiệu đồng ý gửi cho Google trước tag chuyển đổi, nên Google Ads ghi nhận đầy đủ. Khách đã bấm "Chỉ cần thiết" thì giữ nguyên. Cuối thẻ có câu báo "Tiếp tục xem trang khác nghĩa là bạn đồng ý." (sửa được).
+
+### Sửa
+- **Đồng ý cookie**: lựa chọn lưu thêm vào localStorage. Trình duyệt trong app (Zalo, Facebook) xoá cookie thì thẻ không hiện lại nữa.
+
 ## 1.32.1 - 16/11/2026
 
 ### Sửa
