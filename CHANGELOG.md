@@ -1,5 +1,14 @@
 # Nhật ký thay đổi SMLIFE Core
 
+## 1.32.1 - 16/11/2026
+
+### Sửa
+- **Canh đường dẫn** chống sitemap và danh mục bị 404 khi máy chủ quá tải:
+  - Lượt truy cập ngoài trang quản trị (khách, bot, cron) không còn ghi đè bảng đường dẫn bằng một bảng thiếu (mất quy tắc sitemap hoặc ít hơn 80% số dòng). Bảng đang dùng được giữ nguyên, nhật ký ghi dòng "chan". Lưu ở Cài đặt > Đường dẫn tĩnh vẫn hoạt động bình thường.
+  - Máy chủ trả mã 5xx, 508, trang "Error establishing a database connection" hoặc không trả lời sau 15 giây thì ghi nhận là **máy chủ quá tải**, không tự tạo lại bảng đường dẫn. Email riêng "Máy chủ quá tải" kèm các mốc giờ trong ngày (từ lần thứ 2, tối đa 1 email mỗi 6 giờ).
+  - Chỉ tự sửa khi lỗi 2 lần kiểm tra liên tiếp (cách 10 phút), tránh sửa nhầm lúc máy chủ chập chờn.
+  - Trang Canh đường dẫn hiện số lần quá tải trong ngày.
+
 ## 1.32.0 - 16/11/2026
 
 ### Mới

@@ -1,6 +1,6 @@
 <?php
 /**
- * SMLIFE Core - Module: Canh duong dan (1.27.0)
+ * SMLIFE Core - Module: Canh duong dan (1.27.0, nang cap 1.32.1)
  *
  * Dem 29/10/2026 ca smlife.vn va socozy.vn cung bi: sitemap_index.xml tra 404,
  * trang danh muc san pham bi chuyen ve trang chu hoac mo nham chuyen muc blog.
@@ -55,19 +55,60 @@ function smlife_cdd_ngu_canh() {
 	return implode( '+', $k ) . ' ' . $uri . ( $ai ? ' | goi tu: ' . implode( ', ', array_keys( $ai ) ) : '' );
 }
 
+/* Ghi 1 dong vao danh sach "cac lan bang quy tac bi tao lai" (toi da 1 dong / 30 giay) */
+function smlife_cdd_ghi_viet( $kieu ) {
+	$lan = get_option( 'smlife_cdd_viet', array() );
+	$lan = is_array( $lan ) ? $lan : array();
+	if ( ! empty( $lan[0]['t'] ) && time() - (int) $lan[0]['t'] < 30 && $lan[0]['kieu'] === $kieu ) { return; }
+	array_unshift( $lan, array( 't' => time(), 'kieu' => $kieu, 'nc' => smlife_cdd_ngu_canh() ) );
+	update_option( 'smlife_cdd_viet', array_slice( $lan, 0, 25 ), false );
+}
+
 /* Moi lan option rewrite_rules bi ghi/xoa thi ghi lai (khong ghi khi chinh module nay sua) */
 $GLOBALS['smlife_cdd_dang_sua'] = false;
 foreach ( array( 'update_option_rewrite_rules', 'add_option_rewrite_rules', 'delete_option_rewrite_rules' ) as $smlife_cdd_hook ) {
 	add_action( $smlife_cdd_hook, function () use ( $smlife_cdd_hook ) {
 		if ( ! empty( $GLOBALS['smlife_cdd_dang_sua'] ) ) { return; }
-		$lan = get_option( 'smlife_cdd_viet', array() );
-		$lan = is_array( $lan ) ? $lan : array();
-		/* Plugin nao tao lai bang lien tuc thi chi ghi 1 lan moi 30 giay cho nhe */
-		if ( ! empty( $lan[0]['t'] ) && time() - (int) $lan[0]['t'] < 30 ) { return; }
-		array_unshift( $lan, array( 't' => time(), 'kieu' => str_replace( '_option_rewrite_rules', '', $smlife_cdd_hook ), 'nc' => smlife_cdd_ngu_canh() ) );
-		update_option( 'smlife_cdd_viet', array_slice( $lan, 0, 25 ), false );
+		smlife_cdd_ghi_viet( str_replace( '_option_rewrite_rules', '', $smlife_cdd_hook ) );
 	} );
 }
+
+/* 1.32.1: Luot truy cap ngoai admin (khach, bot, cron) khong duoc ghi de bang quy tac
+   bang mot bang THIEU. Luc may chu nghen, WordPress doc ra bang rong, tu tao lai
+   trong khi Rank Math chua nap quy tac -> sitemap va danh muc 404.
+   Bang moi bi coi la thieu khi: bang cu co sitemap ma bang moi khong co,
+   hoac bang moi it hon 80% so dong cua bang cu. Admin va WP-CLI van ghi binh thuong. */
+function smlife_cdd_duoc_ghi_tu_do() {
+	if ( defined( 'WP_CLI' ) && WP_CLI ) { return true; }
+	if ( is_admin() && ! ( function_exists( 'wp_doing_ajax' ) && wp_doing_ajax() ) && ! ( function_exists( 'wp_doing_cron' ) && wp_doing_cron() ) ) { return true; }
+	return false;
+}
+
+function smlife_cdd_bang_thieu( $moi, $cu ) {
+	if ( ! is_array( $cu ) || ! $cu ) { return false; } /* chua co bang cu thi khong co gi de giu */
+	if ( ! is_array( $moi ) || ! $moi ) { return true; }
+	$co_sm = function ( $b ) {
+		foreach ( array_keys( $b ) as $k ) {
+			if ( false !== strpos( (string) $k, 'sitemap_index' ) ) { return true; }
+		}
+		return false;
+	};
+	if ( $co_sm( $cu ) && ! $co_sm( $moi ) ) { return true; }
+	return count( $moi ) < 0.8 * count( $cu );
+}
+
+add_filter( 'pre_update_option_rewrite_rules', function ( $moi, $cu ) {
+	$o = smlife_cdd_opt();
+	if ( empty( $o['enabled'] ) || smlife_cdd_duoc_ghi_tu_do() ) { return $moi; }
+	/* Module tu sua: buoc xoa trang (gia tri rong) duoc phep, bang moi van phai du */
+	if ( ! empty( $GLOBALS['smlife_cdd_dang_sua'] ) ) {
+		if ( '' === $moi || array() === $moi ) { return $moi; }
+		$cu = ! empty( $GLOBALS['smlife_cdd_cu'] ) ? $GLOBALS['smlife_cdd_cu'] : $cu;
+	}
+	if ( ! smlife_cdd_bang_thieu( $moi, $cu ) ) { return $moi; }
+	smlife_cdd_ghi_viet( 'chan' );
+	return $cu; /* giu nguyen bang dang dung */
+}, 10, 2 );
 
 /* ---------- Kiem tra ---------- */
 /* Lay 1 danh muc san pham co hang de thu (luu lai 1 ngay) */
@@ -110,10 +151,19 @@ function smlife_cdd_kiem() {
 	foreach ( $tests as $x ) {
 		$u = add_query_arg( 'smlife_cdd', time(), $x['url'] );
 		$r = wp_remote_get( $u, array( 'timeout' => 15, 'redirection' => 3, 'sslverify' => false, 'user-agent' => 'SMLIFE-Core-Canh-Duong-Dan', 'headers' => array( 'Cache-Control' => 'no-cache' ) ) );
-		if ( is_wp_error( $r ) ) { return null; }
+		if ( is_wp_error( $r ) ) {
+			/* Het thoi gian cho = may chu nghen; loi mang khac thi chi bo qua */
+			if ( preg_match( '/timed out|cURL error 28|timeout/i', $r->get_error_message() ) ) { $GLOBALS['smlife_cdd_bo'] = 'không trả lời sau 15 giây'; }
+			return null;
+		}
 		$code = (int) wp_remote_retrieve_response_code( $r );
-		if ( in_array( $code, array( 403, 429, 500, 502, 503, 504, 520, 521, 522, 524 ), true ) ) { return null; } /* tuong lua / may chu ban: khong ket luan */
 		$body = (string) wp_remote_retrieve_body( $r );
+		if ( in_array( $code, array( 403, 429 ), true ) ) { return null; } /* tuong lua chan: khong ket luan */
+		if ( $code >= 500 || false !== stripos( $body, 'Error establishing a database connection' ) ) {
+			/* May chu qua tai / mat ket noi CSDL: khong phai loi duong dan */
+			$GLOBALS['smlife_cdd_bo'] = ( false !== stripos( $body, 'Error establishing a database connection' ) ? 'mất kết nối cơ sở dữ liệu' : 'trả mã ' . $code );
+			return null;
+		}
 		if ( 200 !== $code ) {
 			$loi[] = $x['ten'] . ' trả mã ' . $code;
 		} elseif ( false === strpos( $body, $x['can'] ) ) {
@@ -125,6 +175,7 @@ function smlife_cdd_kiem() {
 
 /* Tao lai bang quy tac. Chi goi o luot truy cap thuong (Rank Math da nap du quy tac). */
 function smlife_cdd_sua( $ly_do ) {
+	$GLOBALS['smlife_cdd_cu']       = get_option( 'rewrite_rules' );
 	$GLOBALS['smlife_cdd_dang_sua'] = true;
 	delete_transient( 'smlife_cdd_term' );
 	flush_rewrite_rules( false ); /* chi tao lai bang trong database, khong dong toi .htaccess */
@@ -144,13 +195,35 @@ function smlife_cdd_mail( $tieu_de, $noi ) {
 	wp_mail( get_option( 'admin_email' ), '[' . wp_parse_url( home_url(), PHP_URL_HOST ) . '] ' . $tieu_de, $noi . "\n\nCác lần bảng quy tắc bị tạo lại gần nhất:\n" . $dong . "\nXem chi tiết: " . admin_url( 'admin.php?page=smlife-canh-duong-dan' ) );
 }
 
+/* Ghi nhan may chu qua tai: dem trong ngay, ghi nhat ky (1 dong / 30 phut), email toi da 1 lan / 6 gio tu lan thu 2 trong ngay */
+function smlife_cdd_qua_tai( $ly_do ) {
+	$ngay = wp_date( 'Y-m-d' );
+	$q    = get_option( 'smlife_cdd_qt', array() );
+	if ( ! is_array( $q ) || ( isset( $q['ngay'] ) ? $q['ngay'] : '' ) !== $ngay ) { $q = array( 'ngay' => $ngay, 'gio' => array() ); }
+	$q['gio'][] = wp_date( 'H:i' ) . ' ' . $ly_do;
+	$q['gio']   = array_slice( $q['gio'], -30 );
+	update_option( 'smlife_cdd_qt', $q, false );
+	$log = get_option( 'smlife_cdd_log', array() );
+	if ( empty( $log[0] ) || 'qua_tai' !== $log[0]['loai'] || time() - (int) $log[0]['t'] > 30 * MINUTE_IN_SECONDS ) {
+		smlife_cdd_ghi( 'qua_tai', 'Máy chủ quá tải: ' . $ly_do . '. Không phải lỗi đường dẫn, không tự sửa.' );
+	}
+	$o = smlife_cdd_opt();
+	if ( ! empty( $o['email'] ) && count( $q['gio'] ) >= 2 && smlife_khoa_db( 'cdd_qt_mail', 6 * HOUR_IN_SECONDS ) ) {
+		wp_mail( get_option( 'admin_email' ), '[' . wp_parse_url( home_url(), PHP_URL_HOST ) . '] Máy chủ quá tải', 'SMLIFE Core gọi thử website nhưng máy chủ không trả lời bình thường (' . count( $q['gio'] ) . " lần hôm nay). Khách vào lúc này có thể gặp trang lỗi \"Error establishing a database connection\".\n\nCác lần hôm nay:\n- " . implode( "\n- ", $q['gio'] ) . "\n\nNên làm: vào cPanel > Resource Usage xem CPU có chạm trần không, mở Snapshot đúng giờ trên để xem URL nào đang chạy (thường là bot cào bộ lọc sản phẩm). Gửi các mốc giờ này cho nhà cung cấp hosting nếu cần.\n\nXem chi tiết: " . admin_url( 'admin.php?page=smlife-canh-duong-dan' ) );
+	}
+}
+
 /* 1. Trong cron (khong lam cham khach): goi thu URL moi 10 phut, hong thi bat co */
 add_action( 'init', function () {
 	$o = smlife_cdd_opt();
 	if ( empty( $o['enabled'] ) || ! function_exists( 'wp_doing_cron' ) || ! wp_doing_cron() ) { return; }
 	if ( ! smlife_khoa_db( 'cdd_kiem', 9 * MINUTE_IN_SECONDS ) ) { return; }
+	$GLOBALS['smlife_cdd_bo'] = '';
 	$loi = smlife_cdd_kiem();
-	if ( null === $loi ) { return; }
+	if ( null === $loi ) {
+		if ( '' !== $GLOBALS['smlife_cdd_bo'] ) { smlife_cdd_qua_tai( $GLOBALS['smlife_cdd_bo'] ); }
+		return;
+	}
 	$tt = get_option( 'smlife_cdd_tt', array() );
 	$tt = is_array( $tt ) ? $tt : array();
 	$lan_sua = isset( $tt['lan_sua'] ) ? (int) $tt['lan_sua'] : 0;
@@ -163,14 +236,16 @@ add_action( 'init', function () {
 			}
 			$tt = array( 't' => time(), 'loi' => $loi, 'can_sua' => 0, 'lan_sua' => $lan_sua, 'bao' => 1 );
 		} else {
-			$tt = array( 't' => time(), 'loi' => $loi, 'can_sua' => 1, 'lan_sua' => $lan_sua, 'bao' => 0 );
+			/* 1.32.1: phai loi 2 lan kiem lien tiep (cach 10 phut) moi tu sua, tranh sua nham luc may chu chap chon */
+			$dem = isset( $tt['dem'] ) ? (int) $tt['dem'] + 1 : 1;
+			$tt  = array( 't' => time(), 'loi' => $loi, 'can_sua' => $dem >= 2 ? 1 : 0, 'lan_sua' => $lan_sua, 'bao' => 0, 'dem' => $dem );
 		}
 	} else {
 		if ( $lan_sua > 0 ) {
 			smlife_cdd_ghi( 'ok', 'Kiểm tra lại sau khi tự sửa: đã bình thường.' );
 			smlife_cdd_mail( 'Đã tự sửa lỗi đường dẫn', 'SMLIFE Core phát hiện sitemap hoặc danh mục sản phẩm bị lỗi và đã tự tạo lại bảng đường dẫn. Kiểm tra lại: bình thường.' );
 		}
-		$tt = array( 't' => time(), 'loi' => array(), 'can_sua' => 0, 'lan_sua' => 0, 'bao' => 0 );
+		$tt = array( 't' => time(), 'loi' => array(), 'can_sua' => 0, 'lan_sua' => 0, 'bao' => 0, 'dem' => 0 );
 	}
 	update_option( 'smlife_cdd_tt', $tt, false );
 }, 99 );
@@ -211,6 +286,10 @@ function smlife_cdd_page() {
 	} else {
 		echo '<li><strong>' . ( $loi ? '<span style="color:#b32d2e">Lỗi: ' . esc_html( implode( '; ', $loi ) ) . '</span>' : '<span style="color:#1a7f37">Bình thường</span>' ) . '</strong></li>';
 	}
+	$qt = get_option( 'smlife_cdd_qt', array() );
+	if ( is_array( $qt ) && ! empty( $qt['gio'] ) && wp_date( 'Y-m-d' ) === $qt['ngay'] ) {
+		echo '<li><span style="color:#b32d2e">Máy chủ quá tải hôm nay: ' . count( $qt['gio'] ) . ' lần</span> (' . esc_html( implode( ', ', array_slice( $qt['gio'], -10 ) ) ) . ')</li>';
+	}
 	echo '<li>Lần kiểm tra tự động gần nhất: ' . ( ! empty( $tt['t'] ) ? esc_html( wp_date( 'H:i d/m/Y', (int) $tt['t'] ) ) : 'chưa có (cần WP-Cron chạy)' ) . '</li></ul>';
 	echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="smlife_cdd_sua" />';
 	wp_nonce_field( 'smlife_cdd_sua', 'smlife_cdd_n2' );
@@ -236,7 +315,7 @@ function smlife_cdd_page() {
 	echo '</div>';
 
 	$viet = get_option( 'smlife_cdd_viet', array() );
-	echo '<div class="smlife-card"><h2>Các lần bảng quy tắc bị tạo lại</h2><p class="description">Lần nào ngay trước lúc hỏng thì cột cuối cho biết plugin hoặc kiểu truy cập đã gây ra.</p>';
+	echo '<div class="smlife-card"><h2>Các lần bảng quy tắc bị tạo lại</h2><p class="description">Lần nào ngay trước lúc hỏng thì cột cuối cho biết plugin hoặc kiểu truy cập đã gây ra. Dòng "chan" là lượt truy cập ngoài trang quản trị định ghi bảng thiếu và đã bị chặn, bảng đang dùng được giữ nguyên.</p>';
 	if ( ! $viet ) { echo '<p>Chưa ghi nhận lần nào.</p>'; } else {
 		echo '<table class="widefat striped"><tbody>';
 		foreach ( (array) $viet as $v ) { echo '<tr><td style="white-space:nowrap">' . esc_html( wp_date( 'H:i:s d/m/Y', (int) $v['t'] ) ) . '</td><td>' . esc_html( $v['kieu'] ) . '</td><td>' . esc_html( $v['nc'] ) . '</td></tr>'; }
